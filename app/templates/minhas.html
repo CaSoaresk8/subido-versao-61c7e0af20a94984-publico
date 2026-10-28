@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block titulo %}Minhas demandas{% endblock %}
+{% block conteudo %}
+
+{% macro mover(item) %}
+  <form class="mover" method="post" action="/minhas/mover-form">
+    <input type="hidden" name="chave" value="{{ item.chave }}">
+    <input type="hidden" name="visao" value="{{ visao }}">
+    <select name="destino" data-mover aria-label="Mover {{ item.titulo }}">
+      {% for grupo in grupos %}
+      <option value="{{ grupo.chave }}" {{ 'selected' if coluna_do_item[item.chave] == grupo.chave }}>
+        {{ grupo.nome }}{{ '' if grupo.padrao else ' (só sua)' }}
+      </option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-mini" type="submit">Mover</button>
+  </form>
+{% endmacro %}
+
+{% macro meta(item) %}
+  {% if item.tipo == "missao" %}
+    Missão do clã &middot; {{ item.pontos }} pts
+    {%- if item.prazo %} &middot; {{ item.prazo.strftime('%d/%m') }}{% endif %}
+  {% else %}
+    {#- "So sua" seria mentira na tarefa que a mentoria criou: quem acompanha tambem ve. -#}
+    {{ "Da mentoria" if item.mentor else "Só sua" }} {%- if item.prazo %} &middot; {{ item.prazo.strftime('%d/%m') }}{% else %} &middot; sem prazo{% endif %}
+  {% endif %}
+{% endmacro %}
+
+{# Tarefa so sua nao tem pagina propria: o cartao abre o proprio editor. Missao abre a pagina dela. #}
+{% macro editor(item) %}
+  <div class="editor">
+    <form method="post" action="/minhas/tarefas/{{ item.id }}/editar">
+      <input type="hidden" name="visao" value="{{ visao }}">
+      <label class="editor-campo">Título
+        <input name="titulo" value="{{ item.titulo }}" required maxlength="200">
+      </label>
+      <label class="editor-campo">Prazo
+        <input name="prazo" type="date" value="{{ item.prazo.isoformat() if item.prazo else '' }}">
+      </label>
+      <button class="btn btn-mini btn-primario" type="submit">Salvar</button>
+    </form>
+    <form method="post" action="/minhas/tarefas/{{ item.id }}/excluir">
+      <input type="hidden" name="visao" value="{{ visao }}">
+      <button class="btn btn-mini btn-perigo" type="submit">Excluir</button>
+    </form>
+  </div>
+{% endmacro %}
+
+<h1 class="titulo-pagina">Minhas demandas</h1>
+<p class="subtitulo">
+  Missões do clã e suas tarefas particulares no mesmo lugar.
+  Você tem <strong><span data-meus-pontos>{{ pontos_meus }}</span> pontos</strong> conquistados.
+</p>
+
+{% if mentoria %}
+  {# So para quem a mentoria acompanha. O saldo e das duas contas que o Caio definiu: 12 mensais e
+     6 livres, cada uma acumulando no proprio contador. #}
+  <div class="card bloco-mentoria">
+    <div class="mentoria-saldos">
+      <div>
+        <span class="mentoria-numero">{{ mentoria.saldo.mensal.restam }}</span>
+        <span class="missao-meta">de {{ mentoria.saldo.mensal.total }} consultorias mensais</span>
+      </div>
+      <div>
+        <span class="mentoria-numero">{{ mentoria.saldo.livre.restam }}</span>
+        <span class="missao-meta">de {{ mentoria.saldo.livre.total }} consultorias livres</span>
+      </div>
+    </div>
+    {% if mentoria.proximas %}
+      <div class="mentoria-proximas">
+        {% for m in mentoria.proximas %}
+          <div class="missao-meta">
+            <strong>{{ m.inicio | quando(m.duracao_min) }}</strong>
+            &middot; {{ "mensal" if m.tipo == "mensal" else "livre" }}
+            &middot; com {{ m.rastreador.usuario.nome }}
+            {% if m.local %}&middot;
+              {% if m.local.startswith("http") %}<a href="{{ m.local }}" target="_blank" rel="noopener noreferrer">link</a>{% else %}{{ m.local }}{% endif %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="missao-meta">Nenhuma consultoria marcada.</p>
+    {% endif %}
+    {% if erro_saldo %}<div class="alerta alerta-erro">{{ erro_saldo }}</div>{% endif %}
+    <details class="dobra">
+      <summary class="btn btn-mini">Ajustar meu saldo</summary>
+      {# Decisao do Caio: a pessoa pode mudar o total. Quem acompanha ve cada ajuste, com o nome. #}
+      <form class="dobra-corpo" method="post" action="/minhas/saldo">
+        <div class="linha-campos">
+          <div class="campo">
+            <label for="meu-mensais">Total de mensais</label>
+            <input id="meu-mensais" name="mensais" type="number" min="{{ mentoria.saldo.mensal.usadas }}" max="100" value="{{ mentoria.saldo.mensal.total }}">
+          </div>
+          <div class="campo">
+            <label for="meu-livres">Total de livres</label>
+            <input id="meu-livres" name="livres" type="number" min="{{ mentoria.saldo.livre.usadas }}" max="100" value="{{ mentoria.saldo.livre.total }}">
+          </div>
+        </div>
+        <small class="dica">A mentoria vê cada ajuste, com o seu nome.</small>
+        <button class="btn btn-mini btn-primario" type="submit">Salvar</button>
+      </form>
+    </details>
+  </div>
+{% endif %}
+
+{% if erro == "titulo" %}<div class="alerta alerta-erro">Escreva um título para a tarefa.</div>{% endif %}
+{% if erro == "coluna" %}<div class="alerta alerta-erro">Escreva um nome para a coluna.</div>{% endif %}
+{% if erro == "limite" %}<div class="alerta alerta-erro">Você já tem o máximo de colunas extras.</div>{% endif %}
+
+<div class="abas">
+  <a href="/minhas?visao=kanban" class="{{ 'ativo' if visao == 'kanban' }}">Kanban</a>
+  <a href="/minhas?visao=lista" class="{{ 'ativo' if visao == 'lista' }}">Lista</a>
+  <a href="/minhas?visao=calendario" class="{{ 'ativo' if visao == 'calendario' }}">Calendário</a>
+</div>
+
+<div class="acoes-quadro">
+  <details class="dobra">
+    <summary class="btn btn-primario">+ Nova tarefa só minha</summary>
+    <form class="card dobra-corpo" method="post" action="/minhas/tarefas">
+      <input type="hidden" name="visao" value="{{ visao }}">
+      <div class="linha-campos">
+        <div class="campo">
+          <label for="titulo">Título</label>
+          <input id="titulo" name="titulo" required placeholder="Separar criativos do cliente novo">
+        </div>
+        <div class="campo">
+          <label for="prazo">Prazo</label>
+          <input id="prazo" name="prazo" type="date">
+        </div>
+      </div>
+      <button class="btn btn-primario" type="submit">Adicionar tarefa</button>
+    </form>
+  </details>
+
+  {% if pode_criar_coluna %}
+  <details class="dobra">
+    <summary class="btn">+ Nova coluna só sua</summary>
+    <form class="card dobra-corpo" method="post" action="/minhas/colunas">
+      <div class="campo">
+        <label for="nome-coluna">Nome da coluna</label>
+        <input id="nome-coluna" name="nome" required maxlength="60" placeholder="Esperando cliente">
+      </div>
+      <button class="btn" type="submit">Criar coluna</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
+{% if visao == "kanban" %}
+  <p class="subtitulo" style="margin-top: -6px;">
+    As três primeiras colunas valem para o clã: o que você larga em <strong>Concluído</strong> aparece
+    no ranking de todo mundo, e sai de lá assim que você tira. Colunas que você criar são só suas
+    e não pontuam. Arraste os cartões para mover ou reordenar.
+  </p>
+
+  <div class="kanban" data-quadro>
+    {% for grupo in grupos %}
+    <div class="coluna {{ 'coluna-padrao' if grupo.padrao else 'coluna-minha' }}"
+         data-chave="{{ grupo.chave }}">
+      <div class="coluna-topo" data-pega title="Arraste para trocar a coluna de lugar">
+        <strong>{{ grupo.nome }}</strong>
+        <span class="coluna-topo-dir">
+          <span class="conta">{{ grupo.itens|length }}</span>
+          <button class="btn-x" type="button" data-passo="-1"
+                  aria-label="Mover {{ grupo.nome }} para a esquerda">&lsaquo;</button>
+          <button class="btn-x" type="button" data-passo="1"
+                  aria-label="Mover {{ grupo.nome }} para a direita">&rsaquo;</button>
+          {% if not grupo.padrao %}
+          <form method="post" action="/minhas/colunas/{{ grupo.id }}/excluir"
+                onsubmit="return confirm('Excluir a coluna {{ grupo.nome }}? Os cartões voltam para A fazer.')">
+            <button class="btn-x" type="submit" title="Excluir coluna">&times;</button>
+          </form>
+          {% endif %}
+        </span>
+      </div>
+      {# A etiqueta fica vazia em A fazer e Fazendo, mas o div continua ali: sem ele as colunas
+         teriam cabecalhos de alturas diferentes e os cartoes nao alinhariam. #}
+      <div class="coluna-tag">
+        {%- if grupo.chave == 'concluido' -%}Vale ponto
+        {%- elif not grupo.padrao -%}Só você vê
+        {%- endif -%}
+      </div>
+
+      <div class="coluna-corpo" data-coluna="{{ grupo.chave }}">
+        {% for item in grupo.itens %}
+        <div class="cartao {{ 'cartao-missao' if item.tipo == 'missao' else 'cartao-pessoal' }}"
+             draggable="true" data-card="{{ item.chave }}">
+          {% if item.tipo == "missao" %}
+            {# draggable=false: sem isso o navegador arrasta a URL do link em vez do cartao. #}
+            <a class="cartao-titulo cartao-inteiro" draggable="false"
+               href="/missoes/{{ item.id }}">{{ item.titulo }}</a>
+            <small class="cartao-meta">{{ meta(item) }}</small>
+          {% else %}
+            <details class="cartao-abre">
+              {# cartao-inteiro estica o summary por cima do cartao: clicar em qualquer canto abre o editor. #}
+              <summary class="cartao-inteiro">
+                <span class="cartao-titulo">{{ item.titulo }}</span>
+                <small class="cartao-meta">{{ meta(item) }}</small>
+                {% if item.mentor %}<small class="selo selo-mentoria">mentoria &middot; {{ item.mentor }}</small>{% endif %}
+              </summary>
+              {{ editor(item) }}
+            </details>
+          {% endif %}
+          <div class="cartao-acoes">{{ mover(item) }}</div>
+        </div>
+        {% endfor %}
+        <div class="coluna-vazia">Vazio por enquanto</div>
+      </div>
+
+      <details class="dobra dobra-coluna">
+        <summary class="btn btn-mini btn-bloco">+ tarefa aqui</summary>
+        <form class="dobra-corpo" method="post" action="/minhas/tarefas">
+          <input type="hidden" name="visao" value="{{ visao }}">
+          <input type="hidden" name="destino" value="{{ grupo.chave }}">
+          <input name="titulo" required maxlength="200" placeholder="O que você vai fazer"
+                 aria-label="Título da tarefa em {{ grupo.nome }}">
+          <input name="prazo" type="date" aria-label="Prazo da tarefa em {{ grupo.nome }}">
+          <button class="btn btn-mini btn-bloco btn-primario" type="submit">Adicionar</button>
+        </form>
+      </details>
+    </div>
+    {% endfor %}
+  </div>
+
+{% elif visao == "lista" %}
+  <div class="card">
+    {% if itens %}
+      {% for item in itens %}
+      <div class="lista-item">
+        <span class="selo {{ 'selo-ok' if coluna_do_item[item.chave] == 'concluido' else ('selo-fazendo' if coluna_do_item[item.chave] == 'fazendo' else 'selo-afazer') }}">
+          {{ grupos | selectattr('chave', 'equalto', coluna_do_item[item.chave]) | map(attribute='nome') | first }}
+        </span>
+        <div class="corpo">
+          {% if item.tipo == "missao" %}
+            <a class="corpo-link" href="/missoes/{{ item.id }}">
+              <strong>{{ item.titulo }}</strong>
+              <br><small>{{ meta(item) }}</small>
+            </a>
+          {% else %}
+            <details class="cartao-abre">
+              <summary>
+                <strong>{{ item.titulo }}</strong>
+                <br><small>{{ meta(item) }}</small>
+              </summary>
+              {{ editor(item) }}
+            </details>
+          {% endif %}
+        </div>
+        <div class="cartao-acoes">{{ mover(item) }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="vazio">Nada por aqui ainda.</div>
+    {% endif %}
+  </div>
+
+{% else %}
+  <div class="card">
+    {% with base_url = "/minhas?visao=calendario&" %}{% include "_calendario.html" %}{% endwith %}
+  </div>
+{% endif %}
+
+<script src="/static/kanban.js?v={{ versao_js }}" defer></script>
+{% endblock %}

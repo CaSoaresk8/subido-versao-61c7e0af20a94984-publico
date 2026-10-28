@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block titulo %}Agenda do clã{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Agenda</h1>
+<p class="subtitulo">Reuniões, workshops e encontros do clã. Qualquer membro marca, e todo mundo vê.</p>
+
+{% if aviso_google == "conectado" %}
+  <div class="alerta alerta-ok">Conta Google conectada. Os convites dos próximos eventos de cada clã foram enviados.</div>
+{% elif aviso_google == "desconectado" %}
+  <div class="alerta">Conta Google desconectada. Os eventos continuam aqui, só sem convite por e-mail.</div>
+{% elif aviso_google == "cancelado" %}
+  <div class="alerta">Conexão com o Google cancelada. Nada mudou.</div>
+{% elif aviso_google == "expirou" %}
+  <div class="alerta alerta-erro">A conexão com o Google expirou no meio do caminho. Clique em conectar de novo.</div>
+{% elif aviso_google == "erro" %}
+  <div class="alerta alerta-erro">{{ erro_google or "O Google recusou a conexão. Tente de novo." }}</div>
+{% elif aviso_google == "nao-configurado" %}
+  <div class="alerta alerta-erro">O envio de convites ainda não foi configurado neste app.</div>
+{% endif %}
+
+<a href="/agenda/novo" class="btn btn-primario" style="margin-bottom: 20px;">Marcar evento</a>
+
+<div class="card agenda-ampliada">
+{% with base_url = "/agenda?", agenda_ampliada = true %}{% include "_calendario.html" %}{% endwith %}
+</div>
+<h2 class="secao">Próximos</h2>
+{% if proximos %}
+<div class="lista-eventos">
+  {% for evento in proximos %}
+    {% include "_evento_linha.html" %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="vazio">Nada marcado. Use "Marcar evento" para a próxima reunião ou workshop.</div>
+{% endif %}
+
+{% if passados %}
+<details class="dobra-passados">
+  <summary>Já aconteceram ({{ passados | length }})</summary>
+  <div class="lista-eventos">
+    {% for evento in passados %}
+      {% include "_evento_linha.html" %}
+    {% endfor %}
+  </div>
+</details>
+{% endif %}
+
+{% if e_dono %}
+<h2 class="secao">Convites por e-mail</h2>
+<div class="card convite-google">
+  {% if integracao %}
+    {# O endereco de quem envia so aparece para o dono da plataforma. Para os membros ele nao
+       acrescenta nada (eles reconhecem o remetente no proprio email do convite) e e um endereco
+       de pessoa exposto em 19 clas de gente que nao se conhece. #}
+    <p><strong>Os convites saem {{ "pela conta " ~ integracao.email if e_dono else "por uma conta da plataforma" }}.</strong> Cada membro recebe no
+      e-mail com que se cadastrou no app, e só quem é deste clã é convidado para os eventos daqui.
+      Quem entrar no clã depois recebe os convites dos próximos eventos.</p>
+    {% if e_dono %}
+      <div class="acoes-evento">
+        <a class="btn btn-mini" href="/agenda/google/conectar">Trocar a conta</a>
+        <form method="post" action="/agenda/google/desconectar"
+              onsubmit="return confirm('Desconectar a conta Google? Nenhum clã recebe convite por e-mail até conectar de novo.')">
+          <button class="btn btn-mini btn-perigo" type="submit">Desconectar</button>
+        </form>
+      </div>
+    {% endif %}
+  {% elif e_dono and google_configurado %}
+    <p>Conecte a conta Google que vai mandar os convites de <strong>todos os clãs</strong> da
+      plataforma. Cada evento vira um convite só para os membros do clã que o marcou.</p>
+    <a class="btn btn-primario" href="/agenda/google/conectar">Conectar conta Google</a>
+  {% elif e_dono %}
+    <p>Falta configurar a credencial do Google no servidor (GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET).</p>
+  {% else %}
+    <p>O convite por e-mail ainda não foi ativado. A agenda funciona normalmente, e cada evento tem o
+      botão "Adicionar à minha agenda".</p>
+  {% endif %}
+</div>
+
+{% endif %}
+<script src="/static/agenda-previa.js" defer></script>
+{% endblock %}

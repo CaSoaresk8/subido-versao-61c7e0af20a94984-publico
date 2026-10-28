@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Aulas IA{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-pagina">Aulas IA</h1>
+<p class="subtitulo">Aprenda a usar inteligência artificial na prática.</p>
+<div class="aulas-grade">
+{% for aula in aulas %}
+<article class="card aula-card aula-{{ aula.estilo }}">
+  <div class="aula-player" id="player-{{ aula.id }}">
+    <button class="aula-capa" type="button" data-aula="{{ aula.id }}" data-titulo="{{ aula.titulo }}" aria-label="Assistir: {{ aula.titulo }}">
+      <img src="/static/{{ aula.capa }}" alt="" width="1280" height="720">
+      <span class="aula-capa-conteudo"><span class="aula-numero">AULA {{ '%02d'|format(loop.index) }}</span><strong>{{ aula.tema }}</strong></span>
+    </button>
+  </div>
+  <div class="aula-corpo"><h2>{{ aula.titulo }}</h2></div>
+</article>
+{% endfor %}
+</div>
+<script src="/static/aulas-ia.js" defer></script>
+{% endblock %}

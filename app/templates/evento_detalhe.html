@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}{{ evento.titulo }}{% endblock %}
+{% block conteudo %}
+
+<a href="/agenda" class="voltar">&larr; Agenda</a>
+<h1 class="titulo-pagina">{{ evento.titulo }}</h1>
+<p class="subtitulo">
+  <span class="selo selo-evento">{{ tipos.get(evento.tipo, "Evento") }}</span>
+  {{ evento.inicio | quando(evento.duracao_min) }}
+  {% if passou %}&middot; já aconteceu{% endif %}
+</p>
+
+<div class="card evento-card" style="max-width: 720px;">
+  {% if evento.conduzido_por %}<p><strong>Quem conduz:</strong> {{ evento.conduzido_por.nome }}</p>{% endif %}
+  {% if evento.local %}
+    <p><strong>Onde:</strong>
+      {% if evento.local.startswith("http://") or evento.local.startswith("https://") %}
+        <a href="{{ evento.local }}" target="_blank" rel="noopener noreferrer">{{ evento.local }}</a>
+      {% else %}
+        {{ evento.local }}
+      {% endif %}
+    </p>
+  {% endif %}
+  {% if evento.descricao %}<p class="evento-descricao">{{ evento.descricao }}</p>{% endif %}
+  <p class="missao-meta">Marcado por {{ evento.criado_por.nome }}</p>
+
+  <div class="evento-convite">
+    {% if evento.google_status == "enviado" %}
+      <span class="selo selo-ok">convite enviado</span>
+      <span class="missao-meta">O clã recebeu o convite por e-mail.</span>
+    {% elif evento.google_status == "erro" %}
+      <div class="alerta alerta-erro">Convite não enviado: {{ evento.google_erro }}</div>
+      <form method="post" action="/agenda/{{ evento.id }}/reenviar">
+        <button class="btn btn-mini" type="submit">Tentar enviar de novo</button>
+      </form>
+    {% elif integracao %}
+      <form method="post" action="/agenda/{{ evento.id }}/reenviar">
+        <button class="btn btn-mini" type="submit">Enviar convite ao clã</button>
+      </form>
+    {% else %}
+      <span class="missao-meta">Sem convite por e-mail: o envio ainda não foi ativado na plataforma.</span>
+    {% endif %}
+  </div>
+
+  <div class="acoes-evento">
+    <a class="btn btn-mini" href="{{ link_google }}" target="_blank" rel="noopener noreferrer">Adicionar à minha agenda</a>
+    <a class="btn btn-mini" href="/agenda/{{ evento.id }}/editar">Editar</a>
+    <form method="post" action="/agenda/{{ evento.id }}/excluir"
+          onsubmit="return confirm('Excluir o evento? O convite é cancelado para todos, e dá para restaurar pelo Histórico.')">
+      <button class="btn btn-mini btn-perigo" type="submit">Excluir</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

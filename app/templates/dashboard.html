@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard do clã{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Dashboard do clã</h1>
+<p class="subtitulo">Tudo que o clã está fazendo, visível para todo mundo.</p>
+
+{% if semana.sou_responsavel %}
+  <a class="alerta alerta-semana" href="/acompanhamento">
+    Você assumiu o acompanhamento desta semana: {{ semana.feitas }} de {{ semana.total }} conversas feitas. Abrir &rarr;
+  </a>
+{% elif not semana.responsavel %}
+  <a class="alerta alerta-semana" href="/acompanhamento">
+    Ninguém assumiu o acompanhamento desta semana ainda. Ver &rarr;
+  </a>
+{% endif %}
+
+<div class="grade g4">
+  <div class="card kpi">
+    <div class="valor">{{ numeros.pontos_gerados }}</div>
+    <div class="rotulo">Pontos conquistados</div>
+    <div class="nota">de {{ numeros.pontos_potenciais }} possíveis ({{ numeros.aproveitamento }}%)</div>
+  </div>
+  <div class="card kpi">
+    <div class="valor">{{ numeros.conclusao }}%</div>
+    <div class="rotulo">Conclusão do clã</div>
+    <div class="nota">{{ numeros.entregas_concluidas }} de {{ numeros.entregas_possiveis }} entregas</div>
+  </div>
+  <div class="card kpi">
+    <div class="valor">{{ numeros.total_missoes }}</div>
+    <div class="rotulo">Missões em aberto</div>
+    <div class="nota">{{ numeros.vencendo|length }} vencendo em até 7 dias</div>
+  </div>
+  <div class="card kpi">
+    <div class="valor">{{ numeros.total_membros }}</div>
+    <div class="rotulo">Membros no clã</div>
+    <div class="nota">{{ numeros.vencidas|length }} missões já vencidas</div>
+  </div>
+</div>
+
+<div class="split" style="margin-top: 22px;">
+  <div>
+    <h2 class="secao">Missões em aberto</h2>
+    {% if missoes %}
+      <div class="grade">
+        {% for item in missoes %}
+        <div class="card missao-card">
+          <div class="missao-topo">
+            <div>
+              <a href="/missoes/{{ item.missao.id }}" class="missao-titulo">{{ item.missao.titulo }}</a>
+              <div class="missao-meta">
+                {% if item.missao.vencimento %}
+                  Vence {{ item.missao.vencimento.strftime('%d/%m/%Y') }}
+                  {% if item.dias is not none %}
+                    {% if item.dias < 0 %}<span class="selo selo-atrasado">vencida</span>
+                    {% elif item.dias == 0 %}<span class="selo selo-atrasado">hoje</span>
+                    {% elif item.dias <= 7 %}<span class="selo selo-fazendo">faltam {{ item.dias }} dias</span>
+                    {% endif %}
+                  {% endif %}
+                {% else %}Sem prazo{% endif %}
+              </div>
+            </div>
+            <span class="selo selo-pontos">{{ item.missao.pontos }} pts</span>
+          </div>
+
+          <div class="barra {{ 'cheia' if item.progresso.percentual == 100 }}">
+            <span style="width: {{ item.progresso.percentual }}%"></span>
+          </div>
+          <div class="missao-meta">
+            {{ item.progresso.feitas }} de {{ item.progresso.total }} concluíram ({{ item.progresso.percentual }}%)
+            {% if item.minha_entrega and item.minha_entrega.status == "concluido" %}
+              <span class="selo selo-ok">você entregou</span>
+            {% elif item.minha_entrega and item.minha_entrega.status == "fazendo" %}
+              <span class="selo selo-fazendo">você está fazendo</span>
+            {% else %}
+              <span class="selo selo-afazer">você ainda não fez</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="vazio">Nenhuma missão aberta. <a href="/missoes/nova" style="color: var(--accent)">Suba a primeira</a>.</div>
+    {% endif %}
+  </div>
+
+  <div>
+    <h2 class="secao">Calendário</h2>
+    <div class="card">
+      {% with base_url = "/?" %}{% include "_calendario.html" %}{% endwith %}
+    </div>
+  </div>
+</div>
+
+<h2 class="secao">Ranking do clã</h2>
+<div class="card">
+  <div class="rank-cabeca">
+    <span>#</span>
+    <span>Membro</span>
+    <span class="rank-num">Concluídas</span>
+    <span class="rank-num">Pendentes</span>
+    <span class="rank-pontos">Pontos</span>
+    <span></span>
+  </div>
+  {% for linha in ranking %}
+  {# Acordeao: o relatorio abre e recolhe na propria linha, sem sair do dashboard e sem JS. #}
+  <details class="rank-linha {{ 'eu' if linha.membro.id == membro.id }}">
+    <summary>
+      <span class="pos p{{ linha.posicao }}">{{ linha.posicao }}</span>
+      <span class="rank-nome">
+        {{ linha.membro.nome }}
+        {% if linha.ultima_atividade is none %}<span class="sumido">nunca lançou nada</span>{% endif %}
+      </span>
+      <span class="rank-num">{{ linha.concluidas }}</span>
+      <span class="rank-num">{{ linha.pendentes }}</span>
+      <span class="rank-pontos">{{ linha.pontos }}</span>
+      <span class="rank-seta" aria-hidden="true">&#9662;</span>
+    </summary>
+    {% with rel = linha.relatorio %}{% include "_relatorio.html" %}{% endwith %}
+  </details>
+  {% endfor %}
+  <p class="missao-meta" style="margin: 14px 0 0;">Clique em um nome para abrir o relatório dele aqui mesmo.</p>
+</div>
+
+<h2 class="secao">Quem fez cada missão</h2>
+<div class="card">
+  {% if grafico %}
+    {% for item in grafico %}
+    {# details, e nao so :hover: no celular nao existe passar o mouse, e quase todo mundo
+       do cla usa celular. O balao e o atalho no computador, a lista abre no toque. #}
+    <details class="grafico-linha">
+      <summary>
+        <div class="grafico-cabeca">
+          <span class="grafico-nome">{{ item.missao.titulo }}</span>
+          <span class="grafico-conta">{{ item.quantidade }} de {{ numeros.total_membros }}</span>
+        </div>
+        <div class="barra {{ 'cheia' if item.percentual == 100 }}">
+          <span style="width: {{ item.percentual }}%"></span>
+        </div>
+        <div class="grafico-balao">
+          {% if item.quem %}{{ item.quem|map(attribute='nome')|join(', ') }}
+          {% else %}Ninguém concluiu ainda{% endif %}
+        </div>
+      </summary>
+      <div class="grafico-quem">
+        {% if item.quem %}
+          {% for pessoa in item.quem %}
+          <span class="selo selo-ok">{{ pessoa.nome }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="missao-meta">Ninguém concluiu esta missão ainda.</span>
+        {% endif %}
+      </div>
+    </details>
+    {% endfor %}
+  {% else %}
+    <div class="vazio">Nenhuma missão aberta ainda.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

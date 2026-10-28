@@ -1,0 +1,28 @@
+[project]
+name = "copy-e-cola"
+version = "0.1.0"
+description = "Sistema de pontos do cla Copy e Cola"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "sqlalchemy>=2.0",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.20",
+    "itsdangerous>=2.2",
+    "alembic>=1.20.0",
+    "pillow>=12.3.0",
+    "cryptography>=45",
+    "tzdata>=2025.2",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "httpx>=0.28"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Sem isso o pytest poe tests/ no sys.path em vez da raiz, e "import app" nao acha nada.
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100

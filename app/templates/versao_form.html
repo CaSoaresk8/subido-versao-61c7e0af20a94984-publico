@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Publicar minha versão{% endblock %}
+{% block conteudo %}
+<a href="/versoes" class="voltar">&larr; Biblioteca de versões</a>
+<h1 class="titulo-pagina">Compartilhe o que você criou.</h1><p class="subtitulo">Apresente sua versão para a comunidade. Os arquivos continuam no repositório que você indicar.</p>
+{% if erro %}<div class="alerta alerta-erro" role="alert">{{ erro }}</div>{% endif %}
+<form method="post" action="/versoes/importar" class="card versao-formulario">
+<div class="versao-campos"><div class="campo"><label for="nome">Nome da versão</label><input id="nome" name="nome" value="{{ valores.get('nome','') }}" maxlength="100" required placeholder="Ex.: Clã Criativo"></div><div class="campo"><label for="numero">Número da versão</label><input id="numero" name="numero" value="{{ valores.get('numero','') }}" maxlength="40" required placeholder="Ex.: 1.0.0"></div></div>
+<div class="versao-campos"><div class="campo"><label for="autor_publico">Seu nome público</label><input id="autor_publico" name="autor_publico" value="{{ valores.get('autor_publico','') }}" maxlength="80" required placeholder="Nome ou apelido que aparecerá na biblioteca"></div><div class="campo"><label for="categoria">Categoria</label><select id="categoria" name="categoria" required><option value="">Selecione</option>{% for chave,rotulo in categorias.items() %}<option value="{{ chave }}" {{ 'selected' if valores.get('categoria') == chave }}>{{ rotulo }}</option>{% endfor %}</select></div></div>
+<div class="campo"><label for="resumo">O que torna sua versão diferente?</label><textarea id="resumo" name="resumo" maxlength="240" required placeholder="Em até 240 caracteres, conte o que mudou.">{{ valores.get('resumo','') }}</textarea></div>
+<div class="campo"><label for="novidades">Novidades e como usar</label><textarea id="novidades" name="novidades" maxlength="5000" placeholder="Descreva as melhorias e os cuidados para instalar.">{{ valores.get('novidades','') }}</textarea></div>
+<div class="campo"><label for="repositorio">Link do código</label><input type="url" id="repositorio" name="repositorio" value="{{ valores.get('repositorio','') }}" maxlength="500" required placeholder="https://github.com/sua-conta/seu-projeto"></div>
+<div class="campo"><label for="demonstracao">Link da demonstração (opcional)</label><input type="url" id="demonstracao" name="demonstracao" value="{{ valores.get('demonstracao','') }}" maxlength="500" placeholder="https://sua-versao.fly.dev"></div>
+<label class="versao-consentimento"><input type="checkbox" name="confirmar" value="sim" required>Quero compartilhar esta página, meu nome público e os links com os usuários da comunidade.</label>
+<div class="acoes-evento"><button class="btn btn-primario" type="submit">Publicar na biblioteca</button><a class="btn" href="/versoes">Cancelar</a></div>
+</form>
+{% endblock %}

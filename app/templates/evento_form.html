@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block titulo %}{{ "Editar evento" if evento else "Marcar evento" }}{% endblock %}
+{% block conteudo %}
+{# `v` e o que a pessoa digitou quando o salvamento foi recusado; sem erro, vem do evento. Assim um
+   erro de duracao nao apaga o titulo, a data e a descricao que ela ja tinha escrito. #}
+{% set v = valores if valores else {
+  "titulo": evento.titulo if evento else "",
+  "tipo": evento.tipo if evento else "reuniao",
+  "inicio": evento.inicio.strftime("%Y-%m-%dT%H:%M") if evento else "",
+  "duracao_min": evento.duracao_min if evento else 60,
+  "local": evento.local if evento else "",
+  "conduzido_por_id": evento.conduzido_por_id if evento and evento.conduzido_por_id else "",
+  "descricao": evento.descricao if evento else "",
+} %}
+
+<h1 class="titulo-pagina">{{ "Editar evento" if evento else "Marcar evento" }}</h1>
+<p class="subtitulo">Aparece na agenda de todo o clã{{ " e o convite é atualizado para todos" if evento else "" }}.</p>
+
+<div class="card" style="max-width: 640px;">
+  {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+  <form method="post" action="{{ '/agenda/' ~ evento.id ~ '/editar' if evento else '/agenda/novo' }}">
+    <div class="campo">
+      <label for="titulo">Título</label>
+      <input id="titulo" name="titulo" required maxlength="200" {{ '' if evento else 'autofocus' }}
+             value="{{ v.titulo }}" placeholder="Workshop de criativos que convertem">
+    </div>
+    <div class="linha-campos">
+      <div class="campo">
+        <label for="tipo">Tipo</label>
+        <select id="tipo" name="tipo">
+          {% for chave, nome in tipos.items() %}
+            <option value="{{ chave }}" {{ 'selected' if v.tipo == chave }}>{{ nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="campo">
+        <label for="conduzido_por_id">Quem conduz</label>
+        <select id="conduzido_por_id" name="conduzido_por_id">
+          <option value="">Ninguém em especial</option>
+          {% for m in membros %}
+            <option value="{{ m.id }}" {{ 'selected' if v.conduzido_por_id | string == m.id | string }}>{{ m.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="linha-campos">
+      <div class="campo">
+        <label for="inicio">Dia e hora (Brasília)</label>
+        <input id="inicio" name="inicio" type="datetime-local" required value="{{ v.inicio }}">
+      </div>
+      <div class="campo">
+        <label for="duracao_min">Duração</label>
+        <select id="duracao_min" name="duracao_min">
+          {% for minutos, nome in [(30, "30 min"), (45, "45 min"), (60, "1 hora"), (90, "1h30"), (120, "2 horas"), (180, "3 horas"), (240, "4 horas")] %}
+            <option value="{{ minutos }}" {{ 'selected' if v.duracao_min | string == minutos | string }}>{{ nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="local">Link da chamada ou endereço</label>
+      <input id="local" name="local" maxlength="500" value="{{ v.local }}" placeholder="https://meet.google.com/...">
+    </div>
+    <div class="campo">
+      <label for="descricao">Pauta ou descrição</label>
+      <textarea id="descricao" name="descricao" placeholder="O que vai ser tratado, o que levar pronto.">{{ v.descricao }}</textarea>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn btn-primario" type="submit">{{ "Salvar" if evento else "Marcar e convidar o clã" }}</button>
+      <a class="btn" href="{{ '/agenda/' ~ evento.id if evento else '/agenda' }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block titulo %}{% if cla_do_convite %}Convite para {{ cla_do_convite.nome }}{% else %}Convite{% endif %}{% endblock %}
+{% block conteudo %}
+<div class="tela-entrar">
+  <div class="caixa-entrar">
+    {# A imagem segue a mesma regra do nome: o logo do cla so aparece quando o convite vale. Quem
+       chegou com um token vencido ou inventado ve a marca do app e nada do cla do outro lado. #}
+    {% if cla_do_convite and cla_do_convite.logo %}
+      <img class="logo-arte" src="{{ simbolo_do_cla(cla_do_convite) }}" width="84" height="84"
+           alt="" aria-hidden="true">
+    {% else %}
+      {% include "_marca.html" %}
+    {% endif %}
+
+    {% if recusa %}
+      {# Sem nome de cla nesta ramificacao, e de proposito: quem chegou com um token vencido ou
+         inventado nao recebe de brinde a informacao de qual cla existe do outro lado. #}
+      <div class="marca">Convite</div>
+      <p class="sub">Este link não serve mais.</p>
+      <div class="card">
+        <div class="alerta alerta-erro">{{ recusa }}</div>
+        {% if not membro %}
+          <div class="divisor">se você já tem conta</div>
+          <a href="/login" class="btn btn-bloco">Fazer login</a>
+        {% else %}
+          <a href="/" class="btn btn-bloco">Voltar para {{ cla_nome }}</a>
+        {% endif %}
+      </div>
+
+    {% elif ja_membro %}
+      <div class="marca">{{ cla_do_convite.nome }}</div>
+      <p class="sub">Você já está neste clã.</p>
+      <div class="card">
+        {# O POST continua sendo a acao certa: ele nao cria participacao repetida nem gasta uso do
+           convite, so passa a sessao a olhar este cla. #}
+        <form method="post" action="/convite/{{ token }}">
+          <button class="btn btn-primario btn-bloco" type="submit">Abrir {{ cla_do_convite.nome }}</button>
+        </form>
+      </div>
+
+    {% elif membro %}
+      <div class="marca">{{ cla_do_convite.nome }}</div>
+      <p class="sub">Você foi convidado para este clã. Entra com a conta que já está usando, e
+        continua tendo acesso aos seus outros clãs.</p>
+      <div class="card">
+        {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+        <form method="post" action="/convite/{{ token }}">
+          <button class="btn btn-primario btn-bloco" type="submit">
+            Entrar como {{ membro.nome }}
+          </button>
+        </form>
+        <div class="divisor">ou</div>
+        <a href="/" class="btn btn-bloco">Voltar para {{ cla_nome }}</a>
+      </div>
+
+    {% else %}
+      <div class="marca">{{ cla_do_convite.nome }}</div>
+      <p class="sub">Você foi convidado para este clã. Crie sua conta para entrar.</p>
+      <div class="card">
+        {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+        <form method="post" action="/convite/{{ token }}">
+          {% include "_campos_conta.html" %}
+          <button class="btn btn-primario btn-bloco" type="submit">
+            Criar conta e entrar em {{ cla_do_convite.nome }}
+          </button>
+        </form>
+
+        {# Este link e o motivo de o login aceitar `proximo`: quem ja tem conta precisa voltar para
+           ca depois de entrar, senao cairia no cla antigo e o convite ficaria sem uso. #}
+        <div class="divisor">já tem conta</div>
+        <a href="/login?proximo=/convite/{{ token }}" class="btn btn-bloco">
+          Fazer login para aceitar
+        </a>
+      </div>
+    {% endif %}
+
+    {# Fora do if, entao vale nos quatro estados. O convite recusado e onde ele mais serve: a pessoa
+       recebeu um link que nao abre e nao tem a quem perguntar por que. #}
+    {% include "_ajuda.html" %}
+  </div>
+</div>
+{% endblock %}

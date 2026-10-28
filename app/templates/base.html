@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+{# O tema padrao vem escrito aqui, e nao do script: assim a pagina ja nasce com um tema valido
+   mesmo sem JS, e o script logo abaixo so tem trabalho quando a pessoa ja escolheu o outro. #}
+<html lang="pt-BR" data-tema="claro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{{ cla_nome }}{% endblock %}</title>
+  <meta name="theme-color" content="#ffffff">
+  {# Descricao do app, nao de um cla: esta tag e lida por buscador e por quem compartilha o link,
+     e os dois chegam antes de existir cla ativo para nomear. #}
+  <meta name="description" content="Missoes, pontos e demandas do seu cla.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ nome_do_app }}">
+  <link rel="manifest" href="/manifest.webmanifest">
+  {# O ?v= aqui nao e simetria com o css: sem ele a aba continua com o icone antigo depois do
+     deploy, porque quem guarda favicon guarda por endereco e nao por conteudo. #}
+  <link rel="icon" href="/static/icone-192.png?v={{ versao_icone }}" sizes="192x192" type="image/png">
+  <link rel="icon" href="/static/icone-512.png?v={{ versao_icone }}" sizes="512x512" type="image/png">
+  <link rel="apple-touch-icon" href="/static/icone-192.png?v={{ versao_icone }}">
+  {# Este script fica AQUI, antes da folha de estilo e de qualquer coisa do corpo, porque ele
+     precisa acontecer antes da primeira pintura. Rodando no fim da pagina, quem escolheu o tema
+     escuro veria a tela clara piscar antes de escurecer, em toda navegacao. #}
+  <script>
+    (function () {
+      var salvo = null;
+      try { salvo = localStorage.getItem("tema"); } catch (erro) { /* navegacao anonima */ }
+      if (salvo !== "claro" && salvo !== "escuro") return;
+      document.documentElement.dataset.tema = salvo;
+      var cor = document.querySelector('meta[name="theme-color"]');
+      if (cor) cor.setAttribute("content", salvo === "escuro" ? "#0e1015" : "#ffffff");
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/style.css?v={{ versao_css }}">
+</head>
+<body>
+  {% if membro %}
+  <header class="topo">
+    <div class="topo-inner">
+      {# O nome que aparece aqui e do cla ativo, nao do app: era "Copy e Cola" escrito na mao, e
+         com varios clas quem esta olhando decide o que esta escrito. #}
+      {% if meus_clas | length > 1 %}
+        {# <details> e o seletor sem uma linha de JS: abre e fecha no proprio HTML, e cada opcao e
+           um POST de verdade, que continua funcionando com o script bloqueado ou ainda baixando. #}
+        <details class="seletor-cla">
+          <summary class="marca">
+            {% include "_simbolo.html" %}
+            {{ cla_nome }}
+          </summary>
+          <div class="seletor-menu">
+            {% for participacao in meus_clas %}
+              {% if participacao.cla_id == cla.id %}
+                <span class="seletor-atual">{{ participacao.cla.nome }}</span>
+              {% else %}
+                <form method="post" action="/cla/ativo">
+                  <input type="hidden" name="cla_id" value="{{ participacao.cla_id }}">
+                  <button class="seletor-item" type="submit">{{ participacao.cla.nome }}</button>
+                </form>
+              {% endif %}
+            {% endfor %}
+            <a class="seletor-item" href="/criar-cla">Criar outro clã</a>
+          </div>
+        </details>
+      {% else %}
+        <a href="/" class="marca">
+          {% include "_simbolo.html" %}
+          {{ cla_nome }}
+        </a>
+      {% endif %}
+      {% set caminho = request.url.path %}
+      <nav class="nav">
+        <a href="/" class="{{ 'ativo' if caminho == '/' }}">Dashboard</a>
+        <a href="/missoes" class="{{ 'ativo' if caminho.startswith('/missoes') }}">Missões</a>
+        {% if agenda_ativa() %}
+        <a href="/agenda" class="{{ 'ativo' if caminho.startswith('/agenda') }}">Agenda</a>
+        {% endif %}
+        <a href="/minhas" class="{{ 'ativo' if caminho.startswith('/minhas') }}">Minhas demandas</a>
+        <a href="/acompanhamento" class="{{ 'ativo' if caminho.startswith('/acompanhamento') }}">Acompanhamento</a>
+        {% if central_ativa() %}<a href="/versoes" class="{{ 'ativo' if caminho.startswith('/versoes') }}">Versões</a>{% endif %}
+        <a href="/aulas-ia" class="{{ 'ativo' if caminho.startswith('/aulas-ia') }}">Aulas IA</a>
+        <a href="/historico" class="{{ 'ativo' if caminho.startswith('/historico') }}">Histórico</a>
+        <a href="/cla" class="{{ 'ativo' if caminho.startswith('/cla') }}">Clã</a>
+        <a href="/tutorial" class="{{ 'ativo' if caminho.startswith('/tutorial') }}">Tutorial</a>
+      </nav>
+      <div class="topo-dir">
+        <a href="/missoes/nova" class="btn btn-primario btn-mini">Nova missão</a>
+        {% include "_tema.html" %}
+        <span class="quem">{{ membro.nome }}</span>
+        {# Entre o nome e o Sair, que e onde foi pedido. Fica do lado de fora do `.quem` de
+           proposito: o media query do celular esconde o nome, e o canal de ajuda e justamente o que
+           nao pode sumir na tela onde o app mais e usado. #}
+        {% include "_zap.html" %}
+        <form method="post" action="/sair"><button class="btn btn-mini">Sair</button></form>
+      </div>
+    </div>
+  </header>
+  {% elif rastreador %}
+  {# Quem entra so como rastreador nao tem cla para o cabecalho de cima mostrar. Este e o menu
+     dele: painel, clas que acompanha e sair. Nada de missao ou quadro, que sao coisas de membro. #}
+  <header class="topo">
+    <div class="topo-inner">
+      <a href="/rastreador" class="marca">
+        {% include "_simbolo.html" %}
+        Mentoria
+      </a>
+      {% set caminho = request.url.path %}
+      <nav class="nav">
+        <a href="/rastreador" class="{{ 'ativo' if caminho == '/rastreador' }}">Painel</a>
+        <a href="/rastreador/clas" class="{{ 'ativo' if caminho.startswith('/rastreador/clas') }}">Clãs</a>
+      </nav>
+      <div class="topo-dir">
+        {% include "_tema.html" %}
+        <span class="quem">{{ rastreador.usuario.nome }}</span>
+        {% include "_zap.html" %}
+        <form method="post" action="/sair"><button class="btn btn-mini">Sair</button></form>
+      </div>
+    </div>
+  </header>
+  {% else %}
+    {# Sem cabecalho para pendurar, o botao fica solto no canto: as telas de entrada tambem
+       precisam do tema, e e nelas que a pessoa ve o app pela primeira vez. #}
+    <div class="tema-solto">{% include "_tema.html" %}</div>
+  {% endif %}
+  <main class="container">
+    {% block conteudo %}{% endblock %}
+  </main>
+  {# Privacidade e termos no fim de TODA pagina, discretos, a pedido do Caio: nao competem com o que
+     a pessoa veio fazer. Precisam existir e ser achaveis (a lei pede, e o Google exige os dois
+     enderecos para publicar o app da agenda), mas ninguem precisa tropecar neles no formulario. #}
+  <footer class="rodape-legal">
+    <a href="/privacidade">Privacidade</a>
+    <span aria-hidden="true">&middot;</span>
+    <a href="/termos">Termos</a>
+  </footer>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js");
+      });
+    }
+    (function () {
+      // Velocidade do tutorial. A conta e em DECIMOS inteiros (10 a 30), nao em 0.1 somado:
+      // 1.0 + 0.1 + 0.1 em ponto flutuante da 1.2000000000000002 e a tela mostraria lixo.
+      var MIN = 10, MAX = 30;
+      document.querySelectorAll("[data-velocidade]").forEach(function (barra) {
+        barra.hidden = false;
+        mostrar(barra, MIN);
+      });
+      function mostrar(barra, decimos) {
+        barra.querySelector(".velocidade-valor").textContent = (decimos / 10).toFixed(1).replace(".", ",") + "x";
+        barra.querySelector('[data-vel="-1"]').disabled = decimos <= MIN;
+        barra.querySelector('[data-vel="1"]').disabled = decimos >= MAX;
+      }
+      document.addEventListener("click", function (evento) {
+        var botao = evento.target.closest("[data-vel]");
+        if (!botao) return;
+        var player = botao.closest("[data-player]");
+        var video = player.querySelector("video");
+        var decimos = Math.round(video.playbackRate * 10) + Number(botao.dataset.vel);
+        decimos = Math.min(MAX, Math.max(MIN, decimos));
+        // As duas: com preload="none" o video ainda nao carregou quando a pessoa escolhe a velocidade
+        // antes do play, e ao carregar o navegador volta playbackRate para o defaultPlaybackRate.
+        video.defaultPlaybackRate = decimos / 10;
+        video.playbackRate = decimos / 10;
+        mostrar(player.querySelector("[data-velocidade]"), decimos);
+      });
+    })();
+    (function () {
+      // Copiar convite. `navigator.clipboard` so existe em https (e no localhost); o fallback com
+      // execCommand cobre navegador antigo e o caso de a permissao ser negada.
+      document.querySelectorAll("[data-copiar]").forEach(function (b) { b.hidden = false; });
+      function copiarAntigo(texto) {
+        var campo = document.createElement("textarea");
+        campo.value = texto;
+        campo.setAttribute("readonly", "");
+        campo.style.position = "fixed";
+        campo.style.opacity = "0";
+        document.body.appendChild(campo);
+        campo.select();
+        var ok = false;
+        try { ok = document.execCommand("copy"); } catch (erro) { ok = false; }
+        document.body.removeChild(campo);
+        return ok ? Promise.resolve() : Promise.reject();
+      }
+      document.addEventListener("click", function (evento) {
+        var botao = evento.target.closest("[data-copiar]");
+        if (!botao) return;
+        var texto = botao.dataset.copiar;
+        var copia = navigator.clipboard && window.isSecureContext
+          ? navigator.clipboard.writeText(texto).catch(function () { return copiarAntigo(texto); })
+          : copiarAntigo(texto);
+        copia.then(function () {
+          botao.textContent = "Copiado!";
+        }, function () {
+          botao.textContent = "Não copiou";
+        }).then(function () {
+          clearTimeout(botao._volta);
+          botao._volta = setTimeout(function () { botao.textContent = "Copiar"; }, 2000);
+        });
+      });
+    })();
+    (function () {
+      var botoes = document.querySelectorAll("[data-tema-botao]");
+      if (!botoes.length) return;
+      // So aqui o botao aparece. Ele nasce escondido no HTML porque sem JS nao havia como guardar
+      // a escolha, e botao que nao faz nada e pior do que botao que nao existe.
+      botoes.forEach(function (botao) { botao.hidden = false; });
+      document.addEventListener("click", function (evento) {
+        if (!evento.target.closest("[data-tema-botao]")) return;
+        var html = document.documentElement;
+        var novo = html.dataset.tema === "escuro" ? "claro" : "escuro";
+        html.dataset.tema = novo;
+        try { localStorage.setItem("tema", novo); } catch (erro) { /* navegacao anonima */ }
+        var cor = document.querySelector('meta[name="theme-color"]');
+        if (cor) cor.setAttribute("content", novo === "escuro" ? "#0e1015" : "#ffffff");
+      });
+    })();
+  </script>
+</body>
+</html>

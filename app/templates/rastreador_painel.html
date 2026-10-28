@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block titulo %}Painel da mentoria{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Painel da mentoria</h1>
+<p class="subtitulo">
+  {{ pessoas | length }} pessoa{{ "s" if pessoas | length != 1 }} em
+  {{ clas | length }} clã{{ "s" if clas | length != 1 }} que você acompanha.
+</p>
+
+{% if not clas %}
+  <div class="vazio">
+    Você ainda não escolheu nenhum clã.
+    <a href="/rastreador/clas">Escolher clãs para acompanhar</a>.
+  </div>
+{% else %}
+
+{% if parados %}
+  <div class="alerta alerta-erro">
+    <strong>{{ parados | length }} pessoa{{ "s" if parados | length != 1 }}</strong>
+    sem mexer no app há uma semana ou mais.
+  </div>
+{% endif %}
+
+<div class="card">
+  <div class="rastreador-cabeca">
+    <span>Pessoa</span>
+    <span>Clã</span>
+    <span>Missões</span>
+    <span>Pontos</span>
+    <span>Última atividade</span>
+  </div>
+  {% for linha in pessoas %}
+    {# Quem esta parado ha mais tempo vem primeiro: o painel existe para achar quem sumiu. #}
+    <a class="rastreador-linha {{ 'parada' if linha.dias_parado >= 7 }}"
+       href="/rastreador/pessoa/{{ linha.membro.id }}">
+      <span class="rastreador-nome">{{ linha.membro.nome }}</span>
+      <span class="missao-meta">{{ linha.cla_nome }}</span>
+      <span class="missao-meta">{{ linha.concluidas }} feita{{ "s" if linha.concluidas != 1 }}{% if linha.pendentes %}, {{ linha.pendentes }} aberta{{ "s" if linha.pendentes != 1 }}{% endif %}</span>
+      <span class="selo selo-pontos">{{ linha.pontos }}</span>
+      <span class="missao-meta">
+        {% if linha.dias_parado == 0 %}hoje
+        {% elif linha.dias_parado == 1 %}ontem
+        {% else %}há {{ linha.dias_parado }} dias{% endif %}
+      </span>
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

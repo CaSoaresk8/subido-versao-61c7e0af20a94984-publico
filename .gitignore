@@ -1,0 +1,27 @@
+# Banco local e qualquer backup de producao. Nada de dado real no repositorio.
+data/
+*.db
+*.db-wal
+*.db-shm
+backup-*.db
+
+# Segredo nenhum entra aqui.
+.env
+.env.*
+!.env.example
+
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.pytest_cache/
+node_modules/
+dist/
+
+# Lixo que o Windows deixa ao copiar arquivo para dentro do WSL.
+*:Zone.Identifier
+
+# Worktrees do Claude Code moram aqui dentro; nao sao parte do projeto.
+.claude/
+
+.local-review/

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block titulo %}Criar um clã{% endblock %}
+{% block conteudo %}
+<div class="tela-entrar">
+  <div class="caixa-entrar">
+    {# A arte e do app, nao do cla que esta sendo criado: aqui o cla ainda nao existe, e nome nem
+       logo de cla nenhum cabe nesta tela antes de alguem escrever o dele nos campos abaixo. #}
+    {% include "_marca.html" %}
+    <div class="marca">Criar um <span>clã</span></div>
+    {% if membro %}
+      <p class="sub">Você abre o clã novo com a conta que já está usando. O clã de agora continua
+        do jeito que está, e você troca entre os dois pelo nome no topo.</p>
+    {% else %}
+      <p class="sub">Você cria o clã e a sua conta no mesmo passo, e vira o primeiro membro. Depois
+        é só gerar o link de convite para o resto do time.</p>
+    {% endif %}
+
+    <div class="card">
+      {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+      {# enctype multipart e obrigatorio por causa do logo: sem ele o navegador manda so o NOME do
+         arquivo, e o campo chegaria vazio do outro lado sem erro nenhum. #}
+      <form method="post" action="/criar-cla" enctype="multipart/form-data">
+        <div class="campo">
+          <label for="nome_cla">Nome do clã</label>
+          <input id="nome_cla" name="nome_cla" required autofocus maxlength="40"
+                 value="{{ dados.nome_cla or '' }}">
+          <small class="dica">É o nome que aparece no topo do app para todo mundo do clã.</small>
+        </div>
+        <div class="campo">
+          <label for="logo">Brasão do clã (opcional)</label>
+          {# accept filtra o que o seletor de arquivo mostra, e nada mais: quem manda o POST na mao
+             manda o que quiser. Quem recusa de verdade e o servidor, abrindo a imagem. #}
+          <input id="logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp">
+          <small class="dica">PNG, JPG ou WEBP, até 4 MB. Sem brasão, o clã usa o ícone do app.</small>
+        </div>
+        {% if not membro %}
+          {% include "_campos_conta.html" %}
+        {% endif %}
+        <button class="btn btn-primario btn-bloco" type="submit">
+          {% if membro %}Criar o clã{% else %}Criar clã e entrar{% endif %}
+        </button>
+      </form>
+
+      {% if membro %}
+        <div class="divisor">ou</div>
+        <a href="/" class="btn btn-bloco">Voltar para {{ cla_nome }}</a>
+      {% else %}
+        <div class="divisor">já tem conta</div>
+        <a href="/login" class="btn btn-bloco">Fazer login</a>
+      {% endif %}
+    </div>
+
+    {% include "_tutorial_dobra.html" %}
+
+    {% include "_ajuda.html" %}
+  </div>
+</div>
+{% endblock %}

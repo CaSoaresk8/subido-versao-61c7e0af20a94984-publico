@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}{{ "Editar missão" if missao else "Nova missão" }}{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">{{ "Editar missão" if missao else "Subir nova missão" }}</h1>
+<p class="subtitulo">Ela aparece para todos os membros do clã imediatamente.</p>
+
+<div class="card" style="max-width: 640px;">
+  {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+  <form method="post" action="{{ '/missoes/' ~ missao.id ~ '/editar' if missao else '/missoes/nova' }}">
+    <div class="campo">
+      <label for="titulo">Título da missão</label>
+      <input id="titulo" name="titulo" required autofocus value="{{ missao.titulo if missao else '' }}"
+             placeholder="Resumo do Curso Subido de Tráfego">
+    </div>
+    <div class="campo">
+      <label for="descricao">O que precisa ser entregue</label>
+      <textarea id="descricao" name="descricao" placeholder="Explique o critério de conclusão.">{{ missao.descricao if missao else '' }}</textarea>
+    </div>
+    <div class="campo">
+      <label class="escolha">
+        <input type="checkbox" name="exige_resposta" value="1" {{ 'checked' if missao and missao.exige_resposta }}>
+        Exigir uma entrega escrita para concluir
+      </label>
+      <input name="rotulo_resposta" maxlength="200" placeholder="O que pedir. Ex: Link do resumo ou o resumo escrito aqui"
+             value="{{ missao.rotulo_resposta if missao else '' }}">
+      <small class="dica">Quem marcar Concluído vai precisar preencher esse campo. Aceita link ou texto.</small>
+    </div>
+    <div class="linha-campos">
+      <div class="campo">
+        <label for="pontos">Pontos</label>
+        <input id="pontos" name="pontos" type="number" min="0" step="10" value="{{ missao.pontos if missao else 500 }}">
+      </div>
+      <div class="campo">
+        <label for="vencimento">Vencimento</label>
+        <input id="vencimento" name="vencimento" type="date"
+               value="{{ missao.vencimento.isoformat() if missao and missao.vencimento else '' }}">
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn btn-primario" type="submit">{{ "Salvar" if missao else "Subir missão" }}</button>
+      <a class="btn" href="{{ '/missoes/' ~ missao.id if missao else '/missoes' }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

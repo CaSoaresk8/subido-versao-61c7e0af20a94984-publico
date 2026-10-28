@@ -1,0 +1,86 @@
+<div class="foco-layout">
+  <nav class="foco-fila" aria-label="Pessoas do acompanhamento">
+    {% for m in membros %}
+    <a href="/acompanhamento/{{ m.id }}" class="foco-pessoa {{ 'selecionada' if m.id == pessoa.id }}" {{ 'aria-current=page' if m.id == pessoa.id }}>
+      <strong>{{ loop.index }}. {{ m.nome }}</strong>
+      <small>{% if resumo.responsavel and m.id == resumo.responsavel.id %}Responsável da semana{% elif resumo.entradas.get(m.id) and resumo.entradas.get(m.id).status == "sem_resposta" %}Não respondeu{% elif resumo.entradas.get(m.id) %}Discutido{% else %}A discutir{% endif %}</small>
+    </a>
+    {% endfor %}
+  </nav>
+  <div class="foco-conteudo">
+    <div class="foco-cabeca"><h2>{{ pessoa.nome }}</h2><span class="selo">Pessoa {{ membros.index(pessoa) + 1 }} de {{ membros|length }}</span></div>
+{% if pode_registrar %}
+  <h2 class="secao">Conversa desta semana</h2>
+  <div class="card">
+    <form method="post" action="/acompanhamento/{{ pessoa.id }}/conversa">
+      <div class="campo">
+        <label for="como_esta">Como está indo</label>
+        <textarea id="como_esta" name="como_esta" placeholder="O que andou, o que travou, como a pessoa está.">{{ desta_semana.como_esta if desta_semana else '' }}</textarea>
+      </div>
+      <div class="campo">
+        <label for="combinados">Tarefas da semana</label>
+        <textarea id="combinados" name="combinados" placeholder="Uma por linha: o que ficou combinado para a próxima conversa.">{{ desta_semana.combinados if desta_semana else '' }}</textarea>
+      </div>
+      <div class="acoes-evento">
+        <button class="btn btn-primario" type="submit" name="status" value="conversou">Registrar conversa</button>
+        <button class="btn" type="submit" name="status" value="sem_resposta">Não respondeu</button>
+      </div>
+    </form>
+  </div>
+{% endif %}
+
+<details class="perfil-foco"><summary>Perfil e metas</summary>
+<div class="card">
+  {% if not detalhes %}
+    <p class="missao-meta">O perfil e o que foi conversado ficam visíveis só para {{ pessoa.nome.split()[0] }}, para quem assumiu a semana e para a mentoria.</p>
+  {% elif pode_editar_perfil %}
+    <form method="post" action="/acompanhamento/{{ pessoa.id }}/perfil">
+      <div class="campo">
+        <label for="sobre">Contexto</label>
+        <textarea id="sobre" name="sobre" placeholder="O que faz hoje, nicho, há quanto tempo está no tráfego.">{{ perfil.sobre if perfil else '' }}</textarea>
+      </div>
+      <div class="campo">
+        <label for="metas">Metas</label>
+        <textarea id="metas" name="metas" placeholder="Onde quer chegar, e até quando.">{{ perfil.metas if perfil else '' }}</textarea>
+      </div>
+      <div class="campo">
+        <label for="dificuldades">Dificuldades</label>
+        <textarea id="dificuldades" name="dificuldades" placeholder="O que está travando hoje.">{{ perfil.dificuldades if perfil else '' }}</textarea>
+      </div>
+      {% if perfil and perfil.atualizado_por %}
+        <small class="dica">Atualizado por {{ perfil.atualizado_por.nome }} em {{ perfil.atualizado_em.strftime('%d/%m/%Y') }}</small>
+      {% endif %}
+      <button class="btn btn-mini btn-primario" type="submit">Salvar perfil</button>
+    </form>
+  {% endif %}
+</div>
+
+</details>
+    <section class="historico-foco" aria-label="Histórico semanal">
+      <h2 class="secao">Histórico de {{ pessoa.nome }}</h2>
+      <p class="missao-meta">Da semana mais antiga à atual. Arraste para os lados ou deslize com o dedo.</p>
+      <div class="historico-pipeline" tabindex="0" role="region" aria-label="Semanas de {{ pessoa.nome }}" data-pipeline>
+        {% for item in semanas_historico %}
+        {% set e = item.entrada %}
+        <article class="historico-semana">
+          <h3>Semana de {{ item.semana.strftime('%d/%m/%Y') }}</h3>
+          {% if e %}
+          <span class="selo selo-diario-{{ e.status }}">{{ status_do_diario.get(e.status, e.status) }}</span>
+          <p class="missao-meta">Conversou: {{ e.autor.nome }}</p>
+          {% if detalhes %}
+          <h4>Feedback</h4><p class="diario-texto">{{ e.como_esta or 'Sem feedback escrito.' }}</p>
+          <h4>Combinados</h4><p class="diario-texto">{{ e.combinados or 'Sem tarefas combinadas.' }}</p>
+          {% else %}<p class="missao-meta">O conteúdo desta conversa é restrito à pessoa, ao responsável da semana e à mentoria.</p>{% endif %}
+          {% else %}<p class="missao-meta">Sem conversa registrada nesta semana.</p>{% endif %}
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    <nav class="foco-navegacao" aria-label="Avançar entre pessoas">
+    {% set pos = membros.index(pessoa) %}
+    {% if pos > 0 %}<a class="btn" href="/acompanhamento/{{ membros[pos-1].id }}">&larr; Anterior</a>{% else %}<span></span>{% endif %}
+    {% if pos + 1 < membros|length %}<a class="btn btn-primario" href="/acompanhamento/{{ membros[pos+1].id }}">Próxima pessoa &rarr;</a>{% endif %}
+    </nav>
+  </div>
+</div>
+<script src="/static/pipeline.js" defer></script>

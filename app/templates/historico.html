@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block titulo %}Histórico e recuperação{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Histórico</h1>
+<p class="subtitulo">Nada é apagado de verdade. O que foi excluído fica aqui e qualquer membro pode restaurar.</p>
+
+<h2 class="secao">Missões excluídas</h2>
+<div class="card">
+  {% if missoes %}
+    {% for missao in missoes %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ missao.titulo }}</strong>
+        <br><small>
+          {{ missao.pontos }} pts
+          &middot; excluída em {{ missao.excluida_em.strftime('%d/%m/%Y %H:%M') }}
+          {% if missao.excluida_por %} por {{ missao.excluida_por.nome }}{% endif %}
+        </small>
+      </div>
+      <form method="post" action="/historico/missoes/{{ missao.id }}/restaurar">
+        <button class="btn btn-mini" type="submit">Restaurar</button>
+      </form>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="vazio">Nenhuma missão excluída.</div>
+  {% endif %}
+</div>
+
+{% if mostrar_eventos %}
+<h2 class="secao">Eventos excluídos</h2>
+<div class="card">
+  {% if eventos %}
+    {% for evento in eventos %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ evento.titulo }}</strong>
+        <br><small>
+          {{ evento.inicio | quando }}
+          &middot; excluído em {{ evento.excluido_em.strftime('%d/%m/%Y %H:%M') }}
+          {% if evento.excluido_por %} por {{ evento.excluido_por.nome }}{% endif %}
+        </small>
+      </div>
+      <form method="post" action="/historico/eventos/{{ evento.id }}/restaurar">
+        <button class="btn btn-mini" type="submit">Restaurar</button>
+      </form>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="vazio">Nenhum evento excluído.</div>
+  {% endif %}
+</div>
+{% endif %}
+
+<h2 class="secao">Minhas tarefas excluídas</h2>
+<div class="card">
+  {% if tarefas %}
+    {% for tarefa in tarefas %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ tarefa.titulo }}</strong>
+        <br><small>excluída em {{ tarefa.excluida_em.strftime('%d/%m/%Y %H:%M') }}</small>
+      </div>
+      <form method="post" action="/historico/tarefas/{{ tarefa.id }}/restaurar">
+        <button class="btn btn-mini" type="submit">Restaurar</button>
+      </form>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="vazio">Nenhuma tarefa pessoal excluída.</div>
+  {% endif %}
+</div>
+
+<h2 class="secao">Tudo que aconteceu no clã</h2>
+<div class="card">
+  {% if logs %}
+    {% for log in logs %}
+    <div class="log-linha">
+      {{ log.criado_em.strftime('%d/%m %H:%M') }} &middot;
+      <b>{{ log.membro.nome if log.membro else "sistema" }}</b>
+      {{ log.acao }} {{ log.entidade }}: {{ log.detalhe }}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="vazio">Sem registros ainda.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Convite da mentoria{% endblock %}
+{% block conteudo %}
+
+<div class="tela-entrar">
+  <div class="caixa-entrar">
+    {% include "_marca.html" %}
+    <div class="card">
+      {% if not vale %}
+        <h1 class="titulo-pagina">Convite inválido</h1>
+        <p class="subtitulo">Este link não vale mais: foi revogado, venceu ou já foi usado.
+          Peça um novo para quem cuida da plataforma.</p>
+        <a class="btn btn-bloco" href="/login">Ir para o login</a>
+      {% else %}
+        <h1 class="titulo-pagina">Acompanhar pela mentoria</h1>
+        <p class="subtitulo">
+          Esta conta vai poder acompanhar as pessoas dos clãs que você escolher: o que já fizeram,
+          o que está parado, e as tarefas combinadas. Cada clã fica sabendo que você acompanha.
+        </p>
+        {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+        {% if membro %}
+          <p>Você está logado como <strong>{{ membro.nome }}</strong>. O papel de rastreador vai
+            para esta conta.</p>
+          <form method="post" action="/rastreador/convite/{{ token }}">
+            <button class="btn btn-primario btn-bloco" type="submit">Aceitar com esta conta</button>
+          </form>
+        {% else %}
+          <form method="post" action="/rastreador/convite/{{ token }}">
+            {% include "_campos_conta.html" %}
+            <button class="btn btn-primario btn-bloco" type="submit">Criar conta e acompanhar</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% include "_ajuda.html" %}
+  </div>
+</div>
+
+{% endblock %}

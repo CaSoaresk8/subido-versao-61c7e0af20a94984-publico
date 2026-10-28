@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block titulo %}Política de Privacidade{% endblock %}
+{% block conteudo %}
+{# Descreve o que o app FAZ hoje, e nada alem disso. Cada item daqui corresponde a um campo do
+   banco ou a uma chamada que existe no codigo; quando algum deixar de existir, esta pagina muda
+   junto. Politica que promete generalidades e pior que nenhuma: ninguem consegue conferir. #}
+
+<div class="texto-legal">
+  <h1 class="titulo-pagina">Política de Privacidade</h1>
+  <p class="subtitulo">Última atualização: 20 de setembro de 2026.</p>
+
+  <p>O Subido Clã é uma plataforma para grupos ("clãs") organizarem missões, demandas e encontros.
+    Esta página explica quais dados o app guarda, para quê, e como pedir a remoção deles.</p>
+
+  <h2 class="secao">Quem é o responsável</h2>
+  <p>O app é mantido por Caio Soares. Para qualquer assunto relacionado a dados, inclusive remoção,
+    fale pelo WhatsApp <a href="{{ url_zap }}">(11) 97601-2274</a>.</p>
+
+  <h2 class="secao">O que é guardado</h2>
+  <ul>
+    <li><strong>Da sua conta:</strong> nome, e-mail, telefone e a senha (guardada apenas como um
+      código embaralhado, que não permite descobrir a senha original).</li>
+    <li><strong>Do clã:</strong> o clã de que você participa, missões, suas entregas e pontos, suas
+      tarefas pessoais, colunas do seu quadro, eventos da agenda e o histórico de ações do clã.</li>
+    <li><strong>Um cookie de sessão</strong>, só para manter você conectado. Não há cookie de
+      publicidade nem de medição de audiência no app.</li>
+  </ul>
+
+  <h2 class="secao">Para que é usado</h2>
+  <p>Os dados servem para o app funcionar: mostrar o clã, contar os pontos, avisar prazos e enviar
+    os convites dos eventos. Nada é vendido, alugado ou usado para publicidade.</p>
+
+  <h2 class="secao">Quem vê o quê</h2>
+  <ul>
+    <li>Cada clã vê apenas os próprios dados. Um clã não enxerga missões, eventos nem membros de
+      outro clã.</li>
+    <li>Suas <strong>tarefas pessoais</strong> só aparecem para você, inclusive no histórico.</li>
+    <li>Seu <strong>e-mail e telefone não são mostrados</strong> para os outros membros dentro do
+      app. O e-mail é usado para você entrar e para receber o convite dos eventos.</li>
+  </ul>
+
+  <h2 class="secao">Dados do Google (Google Agenda)</h2>
+  <p>O envio de convites usa uma única conta Google conectada pelo responsável da plataforma. Com a
+    permissão <code>calendar.events</code>, o app cria, atualiza e cancela <strong>somente os
+    eventos que ele próprio criou</strong> na agenda dessa conta, com os membros do clã do evento
+    como convidados. O app não lê os outros compromissos dessa agenda e não acessa a agenda de mais
+    ninguém.</p>
+  <p>O uso das informações recebidas das APIs do Google segue a
+    <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank"
+       rel="noopener noreferrer">Política de Dados do Usuário dos Serviços de API do Google</a>,
+    incluindo os requisitos de Uso Limitado. O acesso concedido fica guardado de forma cifrada e
+    pode ser revogado a qualquer momento, tanto pelo botão "Desconectar" na Agenda quanto em
+    <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">
+      myaccount.google.com/permissions</a>.</p>
+  <p>Quem recebe um convite não precisa conectar conta nenhuma: recebe apenas um e-mail.</p>
+
+  <h2 class="secao">Onde os dados ficam</h2>
+  <p>Em um servidor no Brasil (região de São Paulo), com acesso restrito ao responsável pela
+    plataforma. Cópias de segurança são guardadas fora do servidor pelo mesmo responsável.</p>
+
+  <h2 class="secao">Por quanto tempo</h2>
+  <p>Enquanto a conta existir. Ao pedir a remoção, a conta e os dados pessoais são apagados. O que
+    você criou dentro do clã (missões, eventos) pode continuar lá, porque pertence ao grupo, e nesse
+    caso deixa de estar ligado ao seu nome.</p>
+
+  <h2 class="secao">Seus direitos</h2>
+  <p>Você pode pedir a qualquer momento para ver, corrigir ou apagar seus dados, e para retirar o
+    consentimento, pelo WhatsApp acima. A resposta sai em até 15 dias.</p>
+
+  <h2 class="secao">Menores de idade</h2>
+  <p>O app não é destinado a menores de 18 anos.</p>
+
+  <h2 class="secao">Mudanças</h2>
+  <p>Se esta política mudar, a data do topo muda junto, e a versão anterior deixa de valer a partir
+    dessa data.</p>
+
+  <p class="missao-meta"><a href="/termos">Termos de Uso</a></p>
+</div>
+{% endblock %}

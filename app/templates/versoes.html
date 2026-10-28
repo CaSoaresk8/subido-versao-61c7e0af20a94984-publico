@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Central de versões{% endblock %}
+{% block conteudo %}
+<div class="versoes-cabeca"><div><span class="versoes-sobretitulo">CONSTRUÍDO PELA COMUNIDADE</span><h1 class="titulo-pagina">Um sistema. Muitas possibilidades.</h1><p class="subtitulo">Explore o que outras pessoas estão criando e compartilhe sua versão do Subido Clã.</p></div><div class="acoes-evento"><a class="btn" href="/versoes/projetos">Minhas criações</a><a class="btn btn-primario" href="/versoes/criar">Criar minha versão</a></div></div>
+<form class="versoes-filtros card" method="get" action="/versoes">
+<label for="busca-versoes">Buscar versões<input id="busca-versoes" name="q" value="{{ q }}" maxlength="100" placeholder="Nome ou funcionalidade"></label>
+<label for="categoria-versoes">Categoria<select id="categoria-versoes" name="categoria"><option value="">Todas as categorias</option>{% for chave,rotulo in categorias.items() %}<option value="{{ chave }}" {{ 'selected' if categoria == chave }}>{{ rotulo }}</option>{% endfor %}</select></label>
+<label class="versoes-minhas"><input type="checkbox" name="minhas" value="true" {{ 'checked' if minhas }}>Minhas versões</label><button class="btn" type="submit">Filtrar</button>
+</form>
+<div class="versoes-resultados"><h2>Biblioteca de versões</h2><span class="missao-meta">{{ versoes|length }} {{ 'versão encontrada' if versoes|length == 1 else 'versões encontradas' }}</span></div>
+<div class="versoes-grade">
+{% for versao in versoes %}
+<a class="card versao-card" href="/versoes/{{ versao.id }}">
+<div class="versao-arte arte-{{ versao.categoria }}"><span class="versao-monograma">{{ versao.nome[:2]|upper }}</span><span class="versao-numero">{{ versao.numero }}</span><div class="versao-ramos" aria-hidden="true"><span></span><span></span><span></span></div></div>
+<div class="versao-corpo"><div class="versao-etiquetas"><span class="selo">{{ categorias.get(versao.categoria) }}</span>{% if versao.exemplo %}<span class="selo">Exemplo visual</span>{% endif %}</div><h3>{{ versao.nome }}</h3><p>{{ versao.resumo }}</p><div class="versao-rodape"><span>por {{ versao.autor_publico }}</span><span>Conhecer versão &rarr;</span></div></div>
+</a>
+{% else %}<div class="vazio">Nenhuma versão encontrada. <a href="/versoes/criar">Compartilhe a primeira versão</a> ou ajuste os filtros.</div>{% endfor %}
+</div>
+{% endblock %}

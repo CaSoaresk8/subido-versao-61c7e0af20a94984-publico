@@ -1,0 +1,29 @@
+{# O botao que troca entre claro e escuro. Os dois estados ficam os dois no HTML e o CSS esconde o
+   que nao vale: se o JS trocasse o desenho, o botao apareceria com o icone errado ate o script
+   rodar. `hidden` sai no script, porque so com JS ele consegue guardar a escolha.
+
+   O icone mostra PARA ONDE se vai, e nao onde se esta: no tema claro aparece a lua, que e o que o
+   clique faz. E a convencao de todo app que tem este botao, e inverter deixaria as duas leituras
+   possiveis sem nada na tela para desempatar.
+
+   O texto dentro de cada estado nao e decoracao: um botao que e so desenho nao tem nome, e sem ele
+   o leitor de tela anuncia "botao" e para por ai. Ele sai da tela pelo `.so-leitor`, que recorta em
+   vez de usar `display:none`, justamente porque `display:none` o tiraria tambem do leitor. #}
+<button class="btn btn-mini btn-tema" type="button" data-tema-botao hidden
+        title="Trocar entre tema claro e escuro">
+  <span class="ir-escuro">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+    </svg>
+    <span class="so-leitor">Mudar para o tema escuro</span>
+  </span>
+  <span class="ir-claro">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 1.9v2.3M12 19.8v2.3M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.9 12h2.3M19.8 12h2.3M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>
+    </svg>
+    <span class="so-leitor">Mudar para o tema claro</span>
+  </span>
+</button>

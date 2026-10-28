@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Acompanhamento{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Acompanhamento</h1>
+<p class="subtitulo">
+  Semana de {{ resumo.semana.strftime('%d/%m') }} a {{ resumo.fim.strftime('%d/%m') }}.
+  Toda semana alguém do clã conversa com cada pessoa e anota como ela está.
+</p>
+
+{% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+
+<div class="card bloco-semana">
+  {% if not resumo.responsavel %}
+    <p><strong>Ninguém assumiu esta semana ainda.</strong></p>
+    <form method="post" action="/acompanhamento/assumir">
+      <button class="btn btn-primario" type="submit">Eu assumo essa semana</button>
+    </form>
+  {% elif resumo.sou_responsavel %}
+    <p><strong>Você é responsável esta semana.</strong>
+      {{ resumo.feitas }} de {{ resumo.total }} conversa{{ "s" if resumo.total != 1 }} feita{{ "s" if resumo.feitas != 1 }}.</p>
+    <div class="barra {{ 'cheia' if resumo.total and resumo.feitas == resumo.total }}">
+      <span style="width: {{ (100 * resumo.feitas / resumo.total) | round | int if resumo.total else 0 }}%"></span>
+    </div>
+    <details class="dobra">
+      <summary class="btn btn-mini">Transferir para outra pessoa</summary>
+      <form class="dobra-corpo linha-campos" method="post" action="/acompanhamento/transferir">
+        <select name="para" aria-label="Para quem passar a semana">
+          {% for m in membros if m.id != membro.id %}
+            <option value="{{ m.id }}">{{ m.nome }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-mini btn-primario" type="submit">Transferir</button>
+      </form>
+    </details>
+  {% else %}
+    <p><strong>{{ resumo.responsavel.nome }}</strong> é responsável esta semana:
+      {{ resumo.feitas }} de {{ resumo.total }} conversa{{ "s" if resumo.total != 1 }} feita{{ "s" if resumo.feitas != 1 }}.</p>
+  {% endif %}
+</div>
+
+{% if pessoa %}{% include "_acompanhamento_foco.html" %}{% else %}<div class="vazio">Nenhuma pessoa neste clã.</div>{% endif %}
+{% endblock %}

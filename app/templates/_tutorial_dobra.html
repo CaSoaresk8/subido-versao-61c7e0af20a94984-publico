@@ -1,0 +1,21 @@
+{# A dobra do tutorial nas telas de entrada: um clique abre o video ALI, sem sair da pagina.
+
+   Ela mora num arquivo so porque aparece em duas telas (login e criar cla) e precisa ser a mesma
+   coisa nas duas. Nao e a mesma razao do `_tutorial.html` que ela inclui: la o que nao pode
+   divergir e o nome do arquivo de video; aqui e o COMPORTAMENTO. Uma copia que virasse
+   `<a href="/tutorial">` num dos dois lugares continuaria mostrando o video e mesmo assim seria
+   outra coisa, porque tiraria a pessoa de onde ela estava.
+
+   `<details>` e o que faz isso funcionar sem uma linha de JS, e aqui ele carrega peso de verdade:
+   fechado, o navegador nao monta o player, e a tela continua custando o que custa um formulario.
+   Um dropdown escrito em JS custaria o script em toda visita, inclusive nas muitas em que ninguem
+   abre o tutorial, para fazer o que o navegador ja faz.
+
+   Fica FORA do `.card`, e mais discreto que os botoes de dentro, porque quem chega numa tela de
+   entrada quer entrar: o video e para quem ainda nao entendeu o que vai ganhar, e nao pode
+   competir com o formulario. #}
+<details class="tutorial-dobra">
+  <summary>Tutorial: como a plataforma funciona</summary>
+  <p class="dica">Sete minutos mostrando o app por dentro, do zero.</p>
+  {% include "_tutorial.html" %}
+</details>

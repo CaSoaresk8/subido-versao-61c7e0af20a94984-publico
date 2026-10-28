@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block titulo %}{{ pessoa.nome }}{% endblock %}
+{% block conteudo %}
+
+<a href="/acompanhamento" class="voltar">&larr; Acompanhamento</a>
+<h1 class="titulo-pagina">{{ pessoa.nome }}</h1>
+<p class="subtitulo">No clã desde {{ pessoa.entrou_em.strftime('%d/%m/%Y') }}</p>
+
+{% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+
+{% if pode_registrar %}
+  <h2 class="secao">Conversa desta semana</h2>
+  <div class="card">
+    <form method="post" action="/acompanhamento/{{ pessoa.id }}/conversa">
+      <div class="campo">
+        <label>Como {{ pessoa.nome.split()[0] }} está</label>
+        <div class="escolhas-status">
+          {% for chave, nome in status_do_diario.items() %}
+            <label class="escolha">
+              <input type="radio" name="status" value="{{ chave }}" required
+                     {{ 'checked' if desta_semana and desta_semana.status == chave }}>
+              {{ nome }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="campo">
+        <label for="como_esta">Como está indo</label>
+        <textarea id="como_esta" name="como_esta" placeholder="O que andou, o que travou, como a pessoa está.">{{ desta_semana.como_esta if desta_semana else '' }}</textarea>
+      </div>
+      <div class="campo">
+        <label for="combinados">Tarefas da semana</label>
+        <textarea id="combinados" name="combinados" placeholder="Uma por linha: o que ficou combinado para a próxima conversa.">{{ desta_semana.combinados if desta_semana else '' }}</textarea>
+      </div>
+      <button class="btn btn-primario" type="submit">{{ "Atualizar conversa" if desta_semana else "Registrar conversa" }}</button>
+    </form>
+  </div>
+{% endif %}
+
+<h2 class="secao">Perfil</h2>
+<div class="card">
+  {% if not detalhes %}
+    <p class="missao-meta">O perfil e o que foi conversado ficam visíveis só para {{ pessoa.nome.split()[0] }}, para quem assumiu a semana e para a mentoria.</p>
+  {% elif pode_editar_perfil %}
+    <form method="post" action="/acompanhamento/{{ pessoa.id }}/perfil">
+      <div class="campo">
+        <label for="sobre">Contexto</label>
+        <textarea id="sobre" name="sobre" placeholder="O que faz hoje, nicho, há quanto tempo está no tráfego.">{{ perfil.sobre if perfil else '' }}</textarea>
+      </div>
+      <div class="campo">
+        <label for="metas">Metas</label>
+        <textarea id="metas" name="metas" placeholder="Onde quer chegar, e até quando.">{{ perfil.metas if perfil else '' }}</textarea>
+      </div>
+      <div class="campo">
+        <label for="dificuldades">Dificuldades</label>
+        <textarea id="dificuldades" name="dificuldades" placeholder="O que está travando hoje.">{{ perfil.dificuldades if perfil else '' }}</textarea>
+      </div>
+      {% if perfil and perfil.atualizado_por %}
+        <small class="dica">Atualizado por {{ perfil.atualizado_por.nome }} em {{ perfil.atualizado_em.strftime('%d/%m/%Y') }}</small>
+      {% endif %}
+      <button class="btn btn-mini btn-primario" type="submit">Salvar perfil</button>
+    </form>
+  {% endif %}
+</div>
+
+<h2 class="secao">Diário</h2>
+<div class="card">
+  {% for e in historico %}
+    <div class="lista-item diario-item">
+      <div class="corpo">
+        <strong>Semana de {{ e.semana.strftime('%d/%m') }}</strong>
+        <span class="selo selo-diario-{{ e.status }}">{{ status_do_diario.get(e.status, e.status) }}</span>
+        <br><small>Conversou: {{ e.autor.nome }}</small>
+        {% if detalhes %}
+          {% if e.como_esta %}<p class="diario-texto">{{ e.como_esta }}</p>{% endif %}
+          {% if e.combinados %}
+            <p class="missao-meta"><strong>Tarefas da semana</strong></p>
+            <p class="diario-texto">{{ e.combinados }}</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="vazio">Nenhuma conversa registrada ainda.</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

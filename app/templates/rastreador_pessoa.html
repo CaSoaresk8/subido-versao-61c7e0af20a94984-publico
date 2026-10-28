@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block titulo %}{{ pessoa.nome }}{% endblock %}
+{% block conteudo %}
+
+<a href="/rastreador" class="voltar">&larr; Painel</a>
+<h1 class="titulo-pagina">{{ pessoa.nome }}</h1>
+<p class="subtitulo">{{ pessoa.cla.nome }} &middot; {{ email }} &middot; entrou em {{ pessoa.entrou_em.strftime('%d/%m/%Y') }}</p>
+
+{% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+
+{# ---------------------------------------------------------------------------------------------
+   Consultorias: saldo, marcar, historico
+   --------------------------------------------------------------------------------------------- #}
+<h2 class="secao">Consultorias</h2>
+<div class="card">
+  <div class="mentoria-saldos">
+    {% for tipo, nome in tipos_de_mentoria.items() %}
+      <div>
+        <span class="mentoria-numero">{{ saldo[tipo].restam }}</span>
+        <span class="missao-meta">de {{ saldo[tipo].total }} {{ "mensais" if tipo == "mensal" else "livres" }} &middot; {{ saldo[tipo].usadas }} usada{{ "s" if saldo[tipo].usadas != 1 }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <details class="dobra">
+    <summary class="btn btn-mini">Marcar consultoria</summary>
+    <form class="dobra-corpo" method="post" action="/rastreador/pessoa/{{ pessoa.id }}/mentorias">
+      <div class="linha-campos">
+        <div class="campo">
+          <label for="tipo">Tipo</label>
+          <select id="tipo" name="tipo">
+            {% for tipo, nome in tipos_de_mentoria.items() %}
+              <option value="{{ tipo }}">{{ nome }} ({{ saldo[tipo].restam }} restante{{ "s" if saldo[tipo].restam != 1 }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="inicio">Dia e hora (Brasília)</label>
+          <input id="inicio" name="inicio" type="datetime-local" required>
+        </div>
+      </div>
+      <div class="linha-campos">
+        <div class="campo">
+          <label for="duracao_min">Duração</label>
+          <select id="duracao_min" name="duracao_min">
+            {% for minutos, nome in [(30, "30 min"), (45, "45 min"), (60, "1 hora"), (90, "1h30"), (120, "2 horas")] %}
+              <option value="{{ minutos }}" {{ 'selected' if minutos == 60 }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="local">Link da chamada ou endereço</label>
+          <input id="local" name="local" maxlength="500" placeholder="https://meet.google.com/...">
+        </div>
+      </div>
+      <button class="btn btn-primario" type="submit">Marcar</button>
+    </form>
+  </details>
+
+  <details class="dobra">
+    <summary class="btn btn-mini">Ajustar saldo</summary>
+    {# Para exceções: falta perdoada, consultoria bônus. Fica registrado com o seu nome. #}
+    <form class="dobra-corpo" method="post" action="/rastreador/pessoa/{{ pessoa.id }}/saldo">
+      <div class="linha-campos">
+        <div class="campo">
+          <label for="mensais">Total de mensais</label>
+          <input id="mensais" name="mensais" type="number" min="{{ saldo.mensal.usadas }}" max="100" value="{{ saldo.mensal.total }}">
+        </div>
+        <div class="campo">
+          <label for="livres">Total de livres</label>
+          <input id="livres" name="livres" type="number" min="{{ saldo.livre.usadas }}" max="100" value="{{ saldo.livre.total }}">
+        </div>
+      </div>
+      <button class="btn btn-primario" type="submit">Salvar saldo</button>
+    </form>
+  </details>
+
+  {% if historico_do_saldo %}
+    <details class="dobra">
+      <summary class="btn btn-mini">Histórico do saldo ({{ historico_do_saldo | length }})</summary>
+      <div class="dobra-corpo">
+        {% for registro in historico_do_saldo %}
+          <p class="missao-meta">{{ registro.criado_em.strftime('%d/%m %H:%M') }} &middot; {{ registro.detalhe }}</p>
+        {% endfor %}
+      </div>
+    </details>
+  {% endif %}
+
+  {% for m in mentorias %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ m.inicio | quando(m.duracao_min) }}</strong>
+        &middot; {{ tipos_de_mentoria.get(m.tipo, m.tipo) }}
+        <br><small>{{ situacoes.get(m.situacao, m.situacao) }} &middot; com {{ m.rastreador.usuario.nome }}{% if m.local %} &middot; {{ m.local }}{% endif %}</small>
+        <form method="post" action="/rastreador/pessoa/{{ pessoa.id }}/mentorias/{{ m.id }}" class="mentoria-edicao">
+          <select name="situacao" aria-label="Situação da consultoria">
+            {% for chave, nome in situacoes.items() %}
+              <option value="{{ chave }}" {{ 'selected' if m.situacao == chave }}>{{ nome }}</option>
+            {% endfor %}
+          </select>
+          <input name="anotacao" maxlength="2000" value="{{ m.anotacao }}" placeholder="O que foi tratado (só você vê)">
+          <button class="btn btn-mini" type="submit">Salvar</button>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <p class="missao-meta">Nenhuma consultoria marcada ainda.</p>
+  {% endfor %}
+</div>
+
+{# ---------------------------------------------------------------------------------------------
+   Acompanhamento semanal do cla (so leitura)
+   --------------------------------------------------------------------------------------------- #}
+<h2 class="secao">Acompanhamento do clã</h2>
+<div class="card">
+  {% if perfil and (perfil.sobre or perfil.metas or perfil.dificuldades) %}
+    {% if perfil.sobre %}<p><strong>Contexto:</strong> {{ perfil.sobre }}</p>{% endif %}
+    {% if perfil.metas %}<p><strong>Metas:</strong> {{ perfil.metas }}</p>{% endif %}
+    {% if perfil.dificuldades %}<p><strong>Dificuldades:</strong> {{ perfil.dificuldades }}</p>{% endif %}
+  {% endif %}
+  {% for e in diario %}
+    <div class="lista-item diario-item">
+      <div class="corpo">
+        <strong>Semana de {{ e.semana.strftime('%d/%m') }}</strong>
+        <span class="selo selo-diario-{{ e.status }}">{{ status_do_diario.get(e.status, e.status) }}</span>
+        <br><small>Conversou: {{ e.autor.nome }}</small>
+        {% if e.como_esta %}<p class="diario-texto">{{ e.como_esta }}</p>{% endif %}
+        {% if e.combinados %}<p class="diario-texto"><strong>Tarefas da semana:</strong> {{ e.combinados }}</p>{% endif %}
+      </div>
+    </div>
+  {% else %}
+    <p class="missao-meta">O clã ainda não registrou conversa com esta pessoa.</p>
+  {% endfor %}
+</div>
+
+{# ---------------------------------------------------------------------------------------------
+   Anotacao do rastreador (so ele ve)
+   --------------------------------------------------------------------------------------------- #}
+<h2 class="secao">Sua anotação</h2>
+<div class="card">
+  <form method="post" action="/rastreador/pessoa/{{ pessoa.id }}/anotacao">
+    <textarea name="anotacao" maxlength="5000" placeholder="O que foi combinado, onde a pessoa está travando. Só você vê.">{{ anotacao }}</textarea>
+    <button class="btn btn-mini" type="submit">Salvar anotação</button>
+  </form>
+</div>
+
+{# ---------------------------------------------------------------------------------------------
+   Missoes do cla: o rastreador pode mudar a etapa e preencher a entrega
+   --------------------------------------------------------------------------------------------- #}
+<h2 class="secao">Missões do clã</h2>
+<div class="card">
+  {% for linha in linhas %}
+    {% set e = linha.entrega %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ linha.missao.titulo }}</strong>
+        <br><small>
+          {% if e %}
+            {{ status_label.get(e.status, e.status) }}
+            {% if e.coluna_id %}(numa coluna pessoal, não pontua){% endif %}
+          {% else %}ainda não começou{% endif %}
+          &middot; {{ linha.missao.pontos }} pts
+          {% if linha.missao.exige_resposta %}&middot; exige resposta{% endif %}
+        </small>
+        {% if e and e.resposta %}<small class="entrega-texto">{{ e.resposta }}</small>{% endif %}
+        <details class="dobra">
+          <summary class="btn btn-mini">Atualizar entrega</summary>
+          <form class="dobra-corpo" method="post" action="/rastreador/pessoa/{{ pessoa.id }}/missoes/{{ linha.missao.id }}">
+            <select name="status" aria-label="Etapa da entrega">
+              {% for chave, nome in status_label.items() %}
+                <option value="{{ chave }}" {{ 'selected' if (e.status if e else 'a_fazer') == chave }}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+            <textarea name="resposta" placeholder="Link ou texto da entrega">{{ e.resposta if e else '' }}</textarea>
+            <button class="btn btn-mini btn-primario" type="submit">Salvar</button>
+          </form>
+        </details>
+      </div>
+    </div>
+  {% else %}
+    <div class="vazio">O clã não tem missão aberta.</div>
+  {% endfor %}
+</div>
+
+{# ---------------------------------------------------------------------------------------------
+   Tarefas da mentoria
+   --------------------------------------------------------------------------------------------- #}
+<h2 class="secao">Tarefas da mentoria</h2>
+<div class="card">
+  <details class="dobra">
+    <summary class="btn btn-mini">Nova tarefa para {{ pessoa.nome.split()[0] }}</summary>
+    <form class="dobra-corpo" method="post" action="/rastreador/pessoa/{{ pessoa.id }}/tarefas">
+      <input name="titulo" required maxlength="200" placeholder="O que a pessoa precisa fazer">
+      <textarea name="descricao" placeholder="Detalhes (opcional)"></textarea>
+      <input name="prazo" type="date" aria-label="Prazo">
+      <button class="btn btn-primario" type="submit">Criar tarefa</button>
+    </form>
+  </details>
+
+  {% for tarefa in tarefas %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ tarefa.titulo }}</strong>
+        <br><small>
+          {{ status_label.get(tarefa.status, tarefa.status) }}
+          {% if tarefa.prazo %}&middot; para {{ tarefa.prazo.strftime('%d/%m/%Y') }}{% endif %}
+        </small>
+        <details class="dobra">
+          <summary class="btn btn-mini">Editar</summary>
+          <form class="dobra-corpo" method="post" action="/rastreador/pessoa/{{ pessoa.id }}/tarefas/{{ tarefa.id }}">
+            <input name="titulo" required maxlength="200" value="{{ tarefa.titulo }}">
+            <textarea name="descricao">{{ tarefa.descricao }}</textarea>
+            <input name="prazo" type="date" value="{{ tarefa.prazo.isoformat() if tarefa.prazo else '' }}">
+            <select name="status" aria-label="Etapa da tarefa">
+              {% for chave, nome in status_label.items() %}
+                <option value="{{ chave }}" {{ 'selected' if tarefa.status == chave }}>{{ nome }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-mini btn-primario" type="submit">Salvar</button>
+          </form>
+        </details>
+      </div>
+    </div>
+  {% else %}
+    {# As tarefas que a pessoa cria para ela mesma nao aparecem aqui, de proposito: sao privadas,
+       e acompanhar nao e o mesmo que ler a agenda interna de alguem. #}
+    <div class="vazio">Nenhuma tarefa combinada com a mentoria ainda.</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

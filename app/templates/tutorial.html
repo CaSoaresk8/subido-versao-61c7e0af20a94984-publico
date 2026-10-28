@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Tutorial{% endblock %}
+{% block conteudo %}
+<h1>Como a plataforma funciona</h1>
+<p class="sub">Uma volta pelo app inteiro: subir missão, puxar demanda para você, arrastar no quadro
+  e o ponto caindo no ranking.</p>
+
+<div class="tutorial-tela">
+  {% include "_tutorial.html" %}
+</div>
+
+{# Quem chega aqui sem estar logado nao tem cabecalho nenhum na tela (base.html so desenha o topo
+   para quem tem membro), entao ficaria num beco: assistiu o video e nao tem para onde ir. Estes dois
+   botoes sao a saida, e so existem nesse caso. Quem esta logado ja tem o menu inteiro no topo. #}
+{% if not membro %}
+  <div class="tutorial-saidas">
+    <a href="/criar-cla" class="btn btn-primario">Criar meu clã</a>
+    <a href="/login" class="btn">Já tenho conta</a>
+  </div>
+{% endif %}
+
+{# Aqui o link vale para os dois, logado e visitante, e e a unica tela publica onde isso acontece:
+   quem acabou de assistir sete minutos de explicacao e exatamente quem ainda tem a duvida que o
+   video nao cobriu. Quem esta logado tambem tem o botao redondo no topo, e os dois apontam para o
+   mesmo lugar; ter dois caminhos para o mesmo numero nao atrapalha ninguem. #}
+{% include "_ajuda.html" %}
+{% endblock %}

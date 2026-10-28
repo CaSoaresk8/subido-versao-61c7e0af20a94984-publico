@@ -1,0 +1,16 @@
+{# A assinatura do app nas telas sem login: entrar, criar cla e a pagina do convite.
+
+   Sao DUAS imagens, uma por tema, e nao uma com filtro no CSS. A assinatura tem duas cores, e
+   quando o fundo da pagina troca elas vao para lados opostos: o "subido" precisa escurecer e o
+   "CLA" precisa clarear. Filtro atinge a imagem inteira e nao sabe fazer isso. A que nao e do tema
+   atual sai por `display: none` (a regra fica junto de `.marca-arte` no style.css).
+
+   Nao ha troca visivel ao carregar: o `data-tema` ja esta escrito no <html> que veio do servidor, e
+   o script que le a escolha salva roda antes da folha de estilo.
+
+   width/height nos dois, na proporcao real do arquivo (636x192): enquanto a folha nao chegou, e
+   isso que reserva o lugar certo em vez de a pagina pular quando a arte aparece. #}
+<img class="marca-arte marca-no-claro" src="/static/marca-no-claro.png?v={{ versao_marca }}"
+     width="212" height="64" alt="" aria-hidden="true">
+<img class="marca-arte marca-no-escuro" src="/static/marca-no-escuro.png?v={{ versao_marca }}"
+     width="212" height="64" alt="" aria-hidden="true">

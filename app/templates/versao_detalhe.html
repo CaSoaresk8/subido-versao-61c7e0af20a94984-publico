@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}{{ versao.nome }}{% endblock %}
+{% block conteudo %}
+<a href="/versoes" class="voltar">&larr; Biblioteca de versões</a>
+<div class="versoes-cabeca"><div><span class="versoes-sobretitulo">{{ categorias.get(versao.categoria) }}</span><h1 class="titulo-pagina">{{ versao.nome }}</h1><p class="subtitulo">{{ versao.resumo }}</p><p class="missao-meta">{{ versao.numero }} · por {{ versao.autor_publico }} · {{ versao.criado_em.strftime('%d/%m/%Y') }}</p></div></div>
+{% if versao.exemplo %}<div class="alerta">Exemplo visual da biblioteca. Esta ficha não representa uma versão publicada ou hospedada.</div>{% endif %}
+<div class="card versao-descricao"><h2>Sobre esta versão</h2><p class="diario-texto">{{ versao.novidades or 'O autor ainda não adicionou detalhes.' }}</p><div class="acoes-evento">{% if not versao.exemplo %}<a class="btn btn-primario" href="/versoes/criar?base={{ versao.id }}">Criar a partir desta versão</a>{% endif %}{% if versao.repositorio %}<a class="btn btn-primario" href="{{ versao.repositorio }}" target="_blank" rel="noopener noreferrer">Ver código</a>{% endif %}{% if versao.demonstracao and integrada %}<a class="btn" href="/versoes/{{ versao.id }}/experimentar" target="_blank" rel="noopener noreferrer">Experimentar</a>{% elif versao.demonstracao %}<a class="btn" href="{{ versao.demonstracao }}" target="_blank" rel="noopener noreferrer">Visitar site externo</a>{% endif %}</div></div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{# Corpo do acordeao do ranking. Espera "rel", que vem de servicos._relatorio.
+   So missao aparece aqui: tarefa pessoal e de quem criou e nao entra no relatorio de ninguem. #}
+<div class="rel-grade">
+  {% for bloco in [
+      {'titulo': 'Concluídas', 'itens': rel.concluidas, 'cor': 'rel-ok', 'vazio': 'Nada concluído ainda.'},
+      {'titulo': 'Fazendo', 'itens': rel.fazendo, 'cor': 'rel-fazendo', 'vazio': 'Nada em andamento.'},
+      {'titulo': 'Não começou', 'itens': rel.a_fazer, 'cor': 'rel-afazer', 'vazio': 'Nenhuma missão parada.'}
+  ] %}
+  <div class="rel-bloco {{ bloco.cor }}">
+    <div class="rel-titulo">{{ bloco.titulo }} ({{ bloco.itens|length }})</div>
+    {% if bloco.itens %}
+      {% for item in bloco.itens %}
+      <a class="rel-item" href="/missoes/{{ item.missao.id }}">
+        <span class="rel-item-titulo">{{ item.missao.titulo }}</span>
+        <span class="rel-item-meta">
+          {{ item.missao.pontos }} pts
+          {%- if item.entrega and item.entrega.concluida_em %} &middot; entregue {{ item.entrega.concluida_em.strftime('%d/%m') }}
+          {%- elif item.missao.vencimento %} &middot; vence {{ item.missao.vencimento.strftime('%d/%m') }}
+          {%- endif %}
+        </span>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="rel-vazio">{{ bloco.vazio }}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>

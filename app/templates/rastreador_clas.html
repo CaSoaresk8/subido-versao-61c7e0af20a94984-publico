@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titulo %}Clãs que eu acompanho{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Clãs</h1>
+<p class="subtitulo">
+  Escolha quais clãs você acompanha. O clã fica sabendo: entra no histórico dele, com o seu nome.
+</p>
+
+<div class="card">
+  {% for cla, quantos in clas %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ cla.nome }}</strong>
+        <br><small>{{ quantos }} pessoa{{ "s" if quantos != 1 }}</small>
+      </div>
+      {% if cla.id in meus %}
+        <form method="post" action="/rastreador/clas/{{ cla.id }}/parar">
+          <button class="btn btn-mini btn-perigo" type="submit">Parar de acompanhar</button>
+        </form>
+      {% else %}
+        <form method="post" action="/rastreador/clas/{{ cla.id }}/acompanhar">
+          <button class="btn btn-mini" type="submit">Acompanhar</button>
+        </form>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="vazio">Nenhum clã na plataforma ainda.</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

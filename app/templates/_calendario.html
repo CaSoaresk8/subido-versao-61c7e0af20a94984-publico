@@ -1,0 +1,75 @@
+<div class="cal-topo">
+  <a class="btn btn-mini" href="{{ base_url }}ano={{ mes_anterior[0] }}&mes={{ mes_anterior[1] }}">&larr;</a>
+  <div class="cal-mes">{{ mes_nome }} {{ ano }}</div>
+  <a class="btn btn-mini" href="{{ base_url }}ano={{ mes_seguinte[0] }}&mes={{ mes_seguinte[1] }}">&rarr;</a>
+</div>
+<div class="cal">
+  {% for dow in ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"] %}
+    <div class="cal-dow">{{ dow }}</div>
+  {% endfor %}
+  {% for semana in semanas %}
+    {% for dia in semana %}
+      <div class="cal-dia {{ '' if dia.do_mes else 'fora' }} {{ 'hoje' if dia.hoje }}">
+        <div class="cal-num">{{ dia.data.day }}</div>
+        {% for ev in dia.eventos %}
+          {% if ev.tipo == "evento" %}
+            {% if agenda_ampliada %}<details class="cal-evento-detalhes">
+              <summary class="cal-ev evento"><a class="cal-evento-link" href="/agenda/{{ ev.id }}">{{ ev.hora }} {{ ev.titulo }}</a></summary>
+              <div class="cal-evento-popover">
+                <strong>{{ ev.titulo }}</strong>
+                <p>{{ dia.data.strftime('%d/%m/%Y') }} · {{ ev.hora }} · {{ ev.duracao_min }} min</p>
+                {% if ev.local %}<p>{{ ev.local }}</p>{% endif %}
+                {% if ev.descricao %}<p>{{ ev.descricao }}</p>{% endif %}
+                <div class="acoes-evento">
+                  <a class="btn btn-mini" href="{{ ev.link_google }}" target="_blank" rel="noopener noreferrer">Adicionar à minha agenda</a>
+                </div>
+              </div>
+            </details>{% else %}<a class="cal-ev evento" href="/agenda/{{ ev.id }}" title="{{ ev.hora }} {{ ev.titulo }}">{{ ev.hora }} {{ ev.titulo }}</a>{% endif %}
+          {% elif ev.tipo == "mentoria" %}
+            <a class="cal-ev mentoria" href="/minhas" title="{{ ev.hora }} {{ ev.titulo }}">{{ ev.hora }} {{ ev.titulo }}</a>
+          {% elif ev.tipo == "missao" %}
+            <a class="cal-ev" href="/missoes/{{ ev.id }}" title="{{ ev.titulo }}">{{ ev.titulo }}</a>
+          {% else %}
+            <span class="cal-ev pessoal" title="{{ ev.titulo }}">{{ ev.titulo }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+  {% endfor %}
+</div>
+{% set com_evento = [] %}
+{% for semana in semanas %}
+  {% for dia in semana %}
+    {% if dia.do_mes and dia.eventos %}{% set _ = com_evento.append(dia) %}{% endif %}
+  {% endfor %}
+{% endfor %}
+<div class="cal-agenda">
+  {% for dia in com_evento %}
+    {% for ev in dia.eventos %}
+      {% set etiqueta = "%02d/%02d"|format(dia.data.day, dia.data.month) %}
+      {% if ev.tipo == "mentoria" %}
+        <a class="agenda-item mentoria" href="/minhas">
+          <span class="agenda-dia">{{ etiqueta }} {{ ev.hora }}</span>
+          <span class="agenda-titulo">{{ ev.titulo }}</span>
+        </a>
+      {% elif ev.tipo == "evento" %}
+        <a class="agenda-item evento" href="/agenda/{{ ev.id }}">
+          <span class="agenda-dia">{{ etiqueta }} {{ ev.hora }}</span>
+          <span class="agenda-titulo">{{ ev.titulo }}</span>
+        </a>
+      {% elif ev.tipo == "missao" %}
+        <a class="agenda-item" href="/missoes/{{ ev.id }}">
+          <span class="agenda-dia">{{ etiqueta }}</span>
+          <span class="agenda-titulo">{{ ev.titulo }}</span>
+        </a>
+      {% else %}
+        <div class="agenda-item pessoal">
+          <span class="agenda-dia">{{ etiqueta }}</span>
+          <span class="agenda-titulo">{{ ev.titulo }}</span>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="vazio">Nada marcado neste mês.</p>
+  {% endfor %}
+</div>

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block conteudo %}
+<div class="tela-entrar">
+  <div class="caixa-entrar">
+    {# A arte JA escreve "subidoCLA", entao ela e o titulo desta tela. Aqui havia tambem um
+       `<div class="marca">{{ cla_nome }}</div>`, e nesta tela `cla_nome` sempre cai no nome do app,
+       porque ninguem esta logado e nao existe cla ativo para nomear: era o mesmo nome escrito duas
+       vezes, um embaixo do outro.
+
+       Nas outras telas sem login o `.marca` continua, e nao por inconsistencia: la ele diz "Criar um
+       cla" ou o nome do cla que mandou o convite, que e informacao que a assinatura nao carrega. #}
+    {% include "_marca.html" %}
+    <p class="sub">Placar do clã. Entre para lançar suas missões.</p>
+
+    <div class="card">
+      {% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+      <form method="post" action="/login">
+        {# Para onde ir depois de entrar. Vem preenchido quando o login foi aberto a partir de um
+           link de convite, e e o que faz o convite funcionar para quem ja tem conta. O valor ja
+           passou por _destino_seguro no router: e caminho do proprio app ou "/". #}
+        <input type="hidden" name="proximo" value="{{ proximo }}">
+        <div class="campo">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required autofocus autocomplete="email">
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input id="senha" name="senha" type="password" required autocomplete="current-password">
+        </div>
+        <button class="btn btn-primario btn-bloco" type="submit">Entrar</button>
+      </form>
+
+      {# Nao existe mais "criar conta" solta: a conta nasce junto com o destino dela. Quem foi
+         chamado para um cla usa o link de convite; quem esta comecando um cla proprio entra por
+         aqui. #}
+      <div class="divisor">ainda não tem conta</div>
+      <a href="/criar-cla" class="btn btn-bloco">Criar um clã</a>
+      <small class="dica">Foi convidado para um clã? Use o link que te mandaram.</small>
+    </div>
+
+    {# Tambem aqui, e nao so no criar cla: esta e a tela onde uma pessoa chega quando nao sabe o que
+       fazer, e era a unica das duas sem o video a um clique. Quem so quer entrar nao e atrapalhado,
+       porque a dobra comeca fechada e fica abaixo do formulario. #}
+    {% include "_tutorial_dobra.html" %}
+
+    {% include "_ajuda.html" %}
+  </div>
+</div>
+{% endblock %}

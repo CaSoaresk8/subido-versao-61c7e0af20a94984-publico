@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block titulo %}{{ cla_nome }}: membros e convites{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">{{ cla_nome }}</h1>
+<p class="subtitulo">Qualquer membro convida, lista e revoga. O clã não tem líder, então não tem
+  botão que só uma pessoa vê.</p>
+
+{% if e_dono %}
+  <p class="missao-meta"><a href="/plataforma/rastreadores">Rastreadores da mentoria</a></p>
+{% endif %}
+
+{% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+
+<div class="split">
+  <div class="card">
+    <h2 class="cal-mes">Convites</h2>
+    <p class="missao-meta" style="margin-bottom: 14px;">O link é a credencial inteira: quem tiver
+      ele entra. Por isso ele tem validade, pode ter limite de usos e pode ser revogado.</p>
+
+    <form method="post" action="/cla/convites">
+      <div class="linha-campos">
+        <div class="campo">
+          <label for="dias">Validade</label>
+          <select id="dias" name="dias">
+            {% for d in validades %}
+              <option value="{{ d }}" {{ 'selected' if d == validade_padrao }}>
+                {{ d }} dia{{ 's' if d > 1 }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="max_usos">Limite de usos</label>
+          <input id="max_usos" name="max_usos" type="number" min="1" max="60" placeholder="sem limite">
+          <small class="dica">Vazio chama o time todo. 1 faz um link de uma pessoa só.</small>
+        </div>
+      </div>
+      <button class="btn btn-primario" type="submit">Gerar link de convite</button>
+    </form>
+
+    {% if convites %}
+      <div style="margin-top: 20px;">
+        {% for c in convites %}
+        <div class="lista-item">
+          <div class="corpo">
+            {% if vale[c.id] %}
+              {# readonly em vez de texto solto: o toque no celular seleciona o link inteiro, que e
+                 o que se faz com ele (copiar e mandar), sem precisar de script. #}
+              <input readonly onfocus="this.select()" value="{{ link_base }}/convite/{{ c.token }}"
+                     {% if gerado == c.id | string %}autofocus{% endif %}>
+              <small>
+                Vence {{ c.expira_em.strftime('%d/%m/%Y') }}
+                &middot; {{ c.usos }} de {{ c.max_usos if c.max_usos else 'sem limite' }} uso(s)
+                &middot; por {{ c.criado_por.nome if c.criado_por else 'alguém que saiu' }}
+              </small>
+            {% else %}
+              <span class="selo selo-afazer">Não vale mais</span>
+              <small>
+                {{ situacoes[c.id] }}
+                &middot; {{ c.usos }} uso(s)
+                &middot; por {{ c.criado_por.nome if c.criado_por else 'alguém que saiu' }}
+              </small>
+            {% endif %}
+          </div>
+          {% if vale[c.id] %}
+          <div class="acoes-inline">
+            {# Copiar vem antes de Revogar porque e o que se faz com convite em quase toda visita, e
+               no celular selecionar um link comprido na mao e a parte chata. Nasce `hidden`: sem JS
+               nao copia, e o campo acima continua selecionavel no toque, que e o caminho de antes. #}
+            <button class="btn btn-mini" type="button" hidden
+                    data-copiar="{{ link_base }}/convite/{{ c.token }}">Copiar</button>
+            <form method="post" action="/cla/convites/{{ c.id }}/revogar">
+              <button class="btn btn-mini btn-perigo" type="submit">Revogar</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="vazio" style="margin-top: 20px;">Nenhum convite gerado ainda.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 class="cal-mes">Brasão do clã</h2>
+    <p class="missao-meta" style="margin-bottom: 14px;">Aparece no topo de todas as telas e na
+      página do convite. Sem brasão, o clã usa o ícone do app.</p>
+    <div class="lista-item">
+      <img class="logo-arte" src="{{ simbolo_do_cla(cla) }}" width="84" height="84"
+           alt="" aria-hidden="true">
+      <div class="corpo">
+        {# enctype obrigatorio: sem ele o navegador manda so o nome do arquivo, e o servidor
+           receberia um campo de texto onde espera bytes. #}
+        <form method="post" action="/cla/logo" enctype="multipart/form-data">
+          <div class="campo">
+            <label for="logo">{{ 'Trocar o brasão' if cla.logo else 'Escolher um brasão' }}</label>
+            <input id="logo" name="logo" type="file" required
+                   accept="image/png,image/jpeg,image/webp">
+            <small class="dica">PNG, JPG ou WEBP, até 4 MB.</small>
+          </div>
+          <button class="btn btn-primario btn-mini" type="submit">Salvar brasão</button>
+        </form>
+        {% if cla.logo %}
+        <form method="post" action="/cla/logo" style="margin-top: 10px;">
+          <input type="hidden" name="remover" value="1">
+          <button class="btn btn-mini btn-perigo" type="submit">Tirar o brasão</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="cal-mes">Membros</h2>
+    <p class="missao-meta" style="margin-bottom: 14px;">{{ membros | length }} no clã.</p>
+    {% for m in membros %}
+    <div class="lista-item">
+      <div class="corpo">
+        {{ m.nome }}{% if m.id == membro.id %} <span class="selo selo-pontos">você</span>{% endif %}
+        <small>entrou em {{ m.entrou_em.strftime('%d/%m/%Y') }}</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

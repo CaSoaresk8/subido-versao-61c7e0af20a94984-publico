@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block titulo %}{{ missao.titulo }}{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">{{ missao.titulo }}</h1>
+<p class="subtitulo">
+  {% if missao.vencimento %}Vence {{ missao.vencimento.strftime('%d/%m/%Y') }}{% else %}Sem prazo{% endif %}
+  &middot; {{ missao.pontos }} pontos &middot; criada por {{ missao.criada_por.nome }}
+</p>
+
+<div class="split">
+  <div>
+    {% if missao.descricao %}
+    <div class="card" style="margin-bottom: 16px;">
+      <h2 class="secao" style="margin-top: 0;">O que precisa ser entregue</h2>
+      <div>{{ missao.descricao }}</div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2 class="secao" style="margin-top: 0;">Minha entrega</h2>
+      {% if erro == "resposta" %}
+      <div class="alerta alerta-erro">
+        Para marcar como concluída, preencha {{ rotulo_resposta|lower }}.
+      </div>
+      {% endif %}
+      <form method="post" action="/missoes/{{ missao.id }}/entrega">
+        <div class="campo">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            {% for valor, rotulo in status_label.items() %}
+            <option value="{{ valor }}" {{ 'selected' if minha and minha.status == valor }}>{{ rotulo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="campo">
+          <label for="resposta">
+            {{ rotulo_resposta }}{{ ' (obrigatório para concluir)' if missao.exige_resposta else ' (opcional)' }}
+          </label>
+          <textarea id="resposta" name="resposta" style="min-height: 90px;"
+                    placeholder="Cole o link ou escreva aqui mesmo">{{ minha.resposta if minha else '' }}</textarea>
+        </div>
+        <div class="campo">
+          <label for="observacao">Observação</label>
+          <textarea id="observacao" name="observacao" style="min-height: 60px;">{{ minha.observacao if minha else '' }}</textarea>
+        </div>
+        <button class="btn btn-primario" type="submit">Salvar minha entrega</button>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom: 16px;">
+      <h2 class="secao" style="margin-top: 0;">Progresso do clã</h2>
+      <div class="kpi"><div class="valor">{{ progresso.percentual }}%</div>
+      <div class="nota">{{ progresso.feitas }} de {{ progresso.total }} concluíram</div></div>
+      <div class="barra {{ 'cheia' if progresso.percentual == 100 }}" style="margin-top: 12px;">
+        <span style="width: {{ progresso.percentual }}%"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="secao" style="margin-top: 0;">Ações</h2>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a class="btn btn-mini" href="/missoes/{{ missao.id }}/editar">Editar</a>
+        <form method="post" action="/missoes/{{ missao.id }}/excluir"
+              onsubmit="return confirm('Excluir esta missão? Ela vai para o histórico e pode ser recuperada.')">
+          <button class="btn btn-mini btn-perigo" type="submit">Excluir</button>
+        </form>
+      </div>
+      <p class="missao-meta" style="margin-bottom: 0;">Nada é apagado de verdade. A missão vai para o histórico e qualquer membro pode restaurar.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="secao">Quem já mexeu nesta missão</h2>
+<div class="card">
+  {% if entregas %}
+    {% for entrega in entregas %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ entrega.membro.nome }}</strong>
+        {% if entrega.resposta %}
+          {% if entrega.resposta.startswith('http://') or entrega.resposta.startswith('https://') %}
+          <br><small><a href="{{ entrega.resposta }}" target="_blank" rel="noopener" style="color: var(--accent)">abrir entrega</a></small>
+          {% else %}
+          <br><small class="entrega-texto">{{ entrega.resposta }}</small>
+          {% endif %}
+        {% endif %}
+        {% if entrega.observacao %}<br><small>{{ entrega.observacao }}</small>{% endif %}
+      </div>
+      <span class="selo {{ 'selo-ok' if entrega.status == 'concluido' else ('selo-fazendo' if entrega.status == 'fazendo' else 'selo-afazer') }}">
+        {{ status_label[entrega.status] }}
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="vazio">Ninguém lançou nada nesta missão ainda.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

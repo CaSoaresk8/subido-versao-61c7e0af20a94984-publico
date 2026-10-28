@@ -1,0 +1,34 @@
+{# O player, num arquivo so, porque ele aparece na tela /tutorial e na dobra das telas de entrada
+   (`_tutorial_dobra.html`, incluida pelo login e pelo criar cla). Duas copias divergiriam no dia em
+   que o video mudasse de nome.
+
+   preload="none" e a linha que mais importa aqui. Sem ela o navegador comeca a baixar o video assim
+   que a pagina abre, e as telas de entrada passariam a custar dezenas de MB para quem so queria
+   digitar email e senha. Com preload="none" mais o poster, a pagina paga uma imagem de alguns KB, e
+   o video so comeca a existir quando alguem aperta play.
+
+   width e height nao sao o tamanho na tela (quem manda nisso e o CSS): sao a PROPORCAO, e e o que
+   impede a pagina de pular de altura quando o poster termina de carregar.
+
+   O ?v= segue a mesma regra do css e do icone: arquivo novo precisa de endereco novo, senao quem ja
+   assistiu continua recebendo a gravacao antiga. #}
+<div class="tutorial-player" data-player>
+<video class="tutorial-video" controls playsinline preload="none"
+       poster="/static/tutorial-capa.jpg?v={{ versao_video }}"
+       width="1280" height="720">
+  <source src="/static/tutorial.mp4?v={{ versao_video }}" type="video/mp4">
+  {# Fallback de verdade, com link que funciona: navegador que nao toca mp4 mostra isto no lugar de
+     um retangulo preto sem explicacao. #}
+  <p class="dica">Seu navegador não consegue tocar o vídeo aqui.
+    <a href="/static/tutorial.mp4?v={{ versao_video }}">Abrir o tutorial em outra aba</a>.</p>
+</video>
+{# Velocidade de 0,1 em 0,1, de 1,0x a 3,0x. O menu do proprio player nem sempre tem isso (Safari
+   no iPhone nao tem) e, quando tem, para em 2x com saltos de 0,25. Nasce `hidden` pelo mesmo motivo
+   do botao de tema: sem JS o botao nao faria nada, e botao que nao faz nada e pior que nenhum. #}
+<div class="velocidade" data-velocidade hidden>
+  <span class="velocidade-rotulo">Velocidade</span>
+  <button type="button" class="btn btn-mini" data-vel="-1" aria-label="Diminuir velocidade">&minus;</button>
+  <output class="velocidade-valor" aria-live="polite">1,0x</output>
+  <button type="button" class="btn btn-mini" data-vel="1" aria-label="Aumentar velocidade">+</button>
+</div>
+</div>

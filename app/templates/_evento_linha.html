@@ -1,0 +1,11 @@
+{# Uma linha da agenda. Arquivo proprio porque a lista de proximos e a de passados sao a mesma
+   coisa, e duas copias divergiriam no primeiro ajuste. #}
+<a class="evento-linha" href="/agenda/{{ evento.id }}">
+  <span class="evento-quando">{{ evento.inicio | quando(evento.duracao_min) }}</span>
+  <span class="evento-titulo">{{ evento.titulo }}</span>
+  <span class="evento-meta">
+    <span class="selo selo-evento">{{ tipos.get(evento.tipo, "Evento") }}</span>
+    {% if evento.conduzido_por %}com {{ evento.conduzido_por.nome }}{% endif %}
+    {% if evento.google_status == "erro" %}<span class="selo selo-atrasado">convite não enviado</span>{% endif %}
+  </span>
+</a>

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block titulo %}Rastreadores{% endblock %}
+{% block conteudo %}
+
+<h1 class="titulo-pagina">Rastreadores da mentoria</h1>
+<p class="subtitulo">
+  Quem acompanha as pessoas atravessando os clãs. Só você cria, e cada um escolhe quais clãs segue.
+</p>
+
+{% if erro %}<div class="alerta alerta-erro">{{ erro }}</div>{% endif %}
+
+<h2 class="secao">Quem já é rastreador</h2>
+<div class="card">
+  {% for r in rastreadores %}
+    <div class="lista-item">
+      <div class="corpo">
+        <strong>{{ r.usuario.nome }}</strong>
+        <br><small>{{ r.usuario.email }} &middot; desde {{ r.criado_em.strftime('%d/%m/%Y') }}</small>
+      </div>
+      {% if not r.ativo %}<span class="selo selo-afazer">desligado</span>{% endif %}
+    </div>
+  {% else %}
+    <div class="vazio">Ninguém ainda. Gere um convite abaixo.</div>
+  {% endfor %}
+</div>
+
+<h2 class="secao">Convites</h2>
+<div class="card">
+  <form method="post" action="/plataforma/rastreadores/convites" class="linha-campos">
+    <div class="campo">
+      <label for="dias">Validade (dias)</label>
+      <input id="dias" name="dias" type="number" min="1" max="60" value="7">
+    </div>
+    <div class="campo">
+      <label for="max_usos">Limite de usos</label>
+      {# Um uso por padrao, diferente do convite de cla: este da acesso aos dados de varios clas,
+         e link que circula vira acesso que ninguem controla. #}
+      <input id="max_usos" name="max_usos" type="number" min="1" value="1">
+    </div>
+    <div class="campo" style="align-self: end;">
+      <button class="btn btn-primario" type="submit">Gerar convite</button>
+    </div>
+  </form>
+
+  {% for convite in convites %}
+    <div class="lista-item">
+      <div class="corpo">
+        <input readonly onfocus="this.select()" value="{{ link_base }}/rastreador/convite/{{ convite.token }}">
+        <small>
+          {{ situacao(convite) }}
+          &middot; vence {{ convite.expira_em.strftime('%d/%m/%Y') }}
+          &middot; {{ convite.usos }} de {{ convite.max_usos if convite.max_usos else 'sem limite' }} uso(s)
+        </small>
+      </div>
+      <div class="acoes-inline">
+        <button class="btn btn-mini" type="button" hidden
+                data-copiar="{{ link_base }}/rastreador/convite/{{ convite.token }}">Copiar</button>
+        {% if situacao(convite) == "Válido" %}
+          <form method="post" action="/plataforma/rastreadores/convites/{{ convite.id }}/revogar">
+            <button class="btn btn-mini btn-perigo" type="submit">Revogar</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
